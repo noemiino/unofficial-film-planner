@@ -238,6 +238,12 @@ class FilmFestivalPlanner {
         const favoritesList = document.getElementById('favorites-list');
         if (favoritesList) {
             favoritesList.addEventListener('click', (e) => {
+                // Prevent clicking in shared view
+                if (this.isSharedView) {
+                    alert('Cannot interact with favorites in shared view. This is a read-only schedule.');
+                    return;
+                }
+                
                 const favoriteItem = e.target.closest('.favorite-film-item');
                 if (favoriteItem && !favoriteItem.classList.contains('empty')) {
                     const filmId = favoriteItem.dataset.filmId;
@@ -1106,8 +1112,9 @@ class FilmFestivalPlanner {
         }).join('');
         
         // Build screening switcher if film has screenings (show for unscheduled films too)
+        // Hide screening switcher in shared view
         let screeningSwitcher = '';
-        if (currentFilm.screenings && currentFilm.screenings.length > 0) {
+        if (currentFilm.screenings && currentFilm.screenings.length > 0 && !this.isSharedView) {
             const currentScreeningIndex = currentFilm.screenings.findIndex(s => {
                 if (!isScheduled) return false;
                 return s.startTime === currentFilm.startTime && s.endTime === currentFilm.endTime;
@@ -1142,10 +1149,15 @@ class FilmFestivalPlanner {
                         const screeningStartTimeStr = this.formatTime(screeningStartDate);
                         const screeningEndTimeStr = this.formatTime(screeningEndDate);
                         
+                        // Disable screening switcher in shared view
+                        const canSwitch = isAvailable && !this.isSharedView;
+                        const onClickHandler = canSwitch ? `app.switchFilmScreening('${currentFilm.id}', ${index})` : (this.isSharedView ? `alert('Cannot change screenings in shared view. This is a read-only schedule.'); return false;` : 'return false;');
+                        const disabledStyle = (!isAvailable || this.isSharedView) ? 'opacity: 0.5; cursor: not-allowed;' : '';
+                        
                         return `
-                            <div class="screening-option-small ${isSelected ? 'selected' : ''} ${!isAvailable ? 'unavailable' : ''}" 
-                                 onclick="${isAvailable ? `app.switchFilmScreening('${currentFilm.id}', ${index})` : 'return false'}"
-                                 style="${!isAvailable ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
+                            <div class="screening-option-small ${isSelected ? 'selected' : ''} ${!isAvailable ? 'unavailable' : ''} ${this.isSharedView ? 'disabled' : ''}" 
+                                 onclick="${onClickHandler}"
+                                 style="${disabledStyle}">
                                 <div class="screening-time">${screeningDateStr} | ${screeningStartTimeStr} - ${screeningEndTimeStr}</div>
                                 <div class="screening-location">${screening.location}${qaBadge}${unavailableBadge}</div>
                             </div>
@@ -1933,6 +1945,12 @@ class FilmFestivalPlanner {
     }
 
     scheduleFilmFromFavorites(filmId) {
+        // Prevent scheduling in shared view
+        if (this.isSharedView) {
+            alert('Cannot schedule films in shared view. This is a read-only schedule.');
+            return;
+        }
+        
         // Handle both string and number IDs
         const film = this.films.find(f => String(f.id) === String(filmId));
         if (!film) {
@@ -2116,6 +2134,12 @@ class FilmFestivalPlanner {
     }
 
     switchFilmScreening(filmId, screeningIndex) {
+        // Prevent switching screenings in shared view
+        if (this.isSharedView) {
+            alert('Cannot change screenings in shared view. This is a read-only schedule.');
+            return;
+        }
+        
         const film = this.films.find(f => String(f.id) === String(filmId));
         if (!film || !film.screenings || !film.screenings[screeningIndex]) {
             console.error('Film or screening not found');
@@ -3022,6 +3046,12 @@ class FilmFestivalPlanner {
         // Hide delete button in detail modal
         const deleteBtn = document.getElementById('delete-film-btn');
         if (deleteBtn) deleteBtn.style.display = 'none';
+        
+        // Hide favorites sidebar in shared view (since it's not interactive)
+        const favoritesSidebar = document.getElementById('favorites-sidebar');
+        if (favoritesSidebar) {
+            favoritesSidebar.style.display = 'none';
+        }
         
         // Disable status toggle buttons in shared view
         document.querySelectorAll('#status-section .status-toggle-btn').forEach(btn => {
