@@ -1197,11 +1197,22 @@ class FilmFestivalPlanner {
             </div>
         `;
         
-        // Attach status button listeners
+        // Attach status button listeners and disable in shared view
         document.querySelectorAll('#status-section .status-toggle-btn').forEach(btn => {
+            // Disable buttons in shared view
+            if (this.isSharedView) {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            }
+            
             btn.addEventListener('click', (e) => {
-                // Don't handle clicks on disabled buttons
-                if (btn.disabled || btn.classList.contains('disabled')) {
+                // Don't handle clicks on disabled buttons or in shared view
+                if (btn.disabled || btn.classList.contains('disabled') || this.isSharedView) {
+                    if (this.isSharedView) {
+                        alert('Cannot modify films in shared view. This is a read-only schedule.');
+                    }
                     return;
                 }
                 const statusType = e.target.closest('.status-toggle-btn').dataset.status;
@@ -2325,6 +2336,12 @@ class FilmFestivalPlanner {
     }
     
     toggleFilmStatusTypeInPlace(film, statusType, buttonElement) {
+        // Prevent editing in shared view
+        if (this.isSharedView) {
+            alert('Cannot modify films in shared view. This is a read-only schedule.');
+            return;
+        }
+        
         // Toggle a specific status type
         if (statusType === 'favorited') {
             film.favorited = !film.favorited;
@@ -3005,6 +3022,14 @@ class FilmFestivalPlanner {
         // Hide delete button in detail modal
         const deleteBtn = document.getElementById('delete-film-btn');
         if (deleteBtn) deleteBtn.style.display = 'none';
+        
+        // Disable status toggle buttons in shared view
+        document.querySelectorAll('#status-section .status-toggle-btn').forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('disabled');
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        });
         
         // Disable film block interactions (they'll still be viewable)
         // The detail modal will still work but won't have delete/edit options
