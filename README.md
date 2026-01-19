@@ -87,7 +87,6 @@ To make setup easier, you can import a pre-configured Notion database:
 
 2. **Import into Notion**:
    - In Notion, create a new page or go to an existing page
-   - Type `/table` and select "Table - Inline" or "Table - Full page"
    - Click "..." (three dots) in the top right of the table
    - Select "Import" → "CSV"
    - Upload the `Film-planner-database-template-csv.csv` file
