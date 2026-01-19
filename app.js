@@ -1306,9 +1306,6 @@ class FilmFestivalPlanner {
     }
 
     scrollModalIntoView() {
-        const isMobile = window.innerWidth <= 768;
-        if (!isMobile) return;
-        
         // Wait a bit for the modal to render and position itself
         setTimeout(() => {
             const modal = document.getElementById('film-detail-modal');
@@ -1347,9 +1344,10 @@ class FilmFestivalPlanner {
                 }
             }
             
-            // Also ensure calendar is in view so user can see the timetable
+            // Also ensure calendar is in view so user can see the timetable (on desktop)
+            const isMobile = window.innerWidth <= 768;
             const calendar = document.getElementById('calendar');
-            if (calendar) {
+            if (calendar && !isMobile) {
                 // Use a small delay to let the modal scroll complete first
                 setTimeout(() => {
                     const calendarRect = calendar.getBoundingClientRect();
