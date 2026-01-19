@@ -69,7 +69,7 @@ Your database needs these properties (exact names or variations work):
 - **Favorited** (Checkbox property)
 - **Ticket** (Checkbox property)
 - **Moderating** (Checkbox property)
-- **Unavailable** (Checkbox property) - Marks time slots as unavailable (e.g., birthdays, other commitments)
+- **Unavailable** (Checkbox property) - Marks time slots as unavailable (other commitments)
 - **Screenings** (Text/Rich Text property) - Stores all available screenings as JSON (for films with multiple screening times)
 
 **Property Name Variations:**
