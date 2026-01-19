@@ -238,12 +238,6 @@ class FilmFestivalPlanner {
         const favoritesList = document.getElementById('favorites-list');
         if (favoritesList) {
             favoritesList.addEventListener('click', (e) => {
-                // Prevent clicking in shared view
-                if (this.isSharedView) {
-                    alert('Cannot interact with favorites in shared view. This is a read-only schedule.');
-                    return;
-                }
-                
                 const favoriteItem = e.target.closest('.favorite-film-item');
                 if (favoriteItem && !favoriteItem.classList.contains('empty')) {
                     const filmId = favoriteItem.dataset.filmId;
@@ -254,6 +248,7 @@ class FilmFestivalPlanner {
                         });
                         // Add active state to clicked item
                         favoriteItem.classList.add('active');
+                        // Allow viewing details even in shared view, but scheduling is disabled
                         this.showFilmDetailFromFavorites(filmId);
                     }
                 }
@@ -3046,12 +3041,6 @@ class FilmFestivalPlanner {
         // Hide delete button in detail modal
         const deleteBtn = document.getElementById('delete-film-btn');
         if (deleteBtn) deleteBtn.style.display = 'none';
-        
-        // Hide favorites sidebar in shared view (since it's not interactive)
-        const favoritesSidebar = document.getElementById('favorites-sidebar');
-        if (favoritesSidebar) {
-            favoritesSidebar.style.display = 'none';
-        }
         
         // Disable status toggle buttons in shared view
         document.querySelectorAll('#status-section .status-toggle-btn').forEach(btn => {
