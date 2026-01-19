@@ -1818,9 +1818,19 @@ class FilmFestivalPlanner {
                     });
                 }
                 
-                this.renderCalendar();
-                this.renderFavoritesSidebar();
+                // UX: mirror the behavior when scheduling from favorites / switching screenings
+                const filmDate = new Date(film.startTime);
+                // Navigate calendar so the new screening is visible
+                this.navigateToDate(filmDate);
+                
+                // Close modal so the user can see the calendar update and animation
                 this.closeModal();
+                
+                // Re-render calendar and favorites, then pulse the new block and show feedback
+                this.renderCalendar();
+                this.addPulseAnimation(film.id);
+                this.showScheduleFeedback(film.title, filmDate, false);
+                this.renderFavoritesSidebar();
             });
             
             results.appendChild(option);

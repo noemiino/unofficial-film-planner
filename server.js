@@ -180,44 +180,90 @@ app.post('/api/iffr/parse', async (req, res) => {
         const screenings = [];
         const $ = cheerio.load(html);
         
+        // Support both English and Dutch month names
         const monthMap = {
+            // English
             'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
-            'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
+            'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11,
+            // Dutch
+            'januari': 0, 'februari': 1, 'maart': 2, 'april': 3, 'mei': 4, 'juni': 5,
+            'juli': 6, 'augustus': 7, 'september': 8, 'oktober': 9, 'november': 10, 'december': 11
         };
         
         // Find all <li> elements that contain a <time> tag (these are screenings)
-        $('li').each((index, element) => {
+        const allLis = $('li');
+        console.log(`Total <li> elements found: ${allLis.length}`);
+        
+        // Try to find screenings in the specific container first
+        const screeningsContainer = $('ul.flex.flex-col.gap-2, ul[class*="flex"][class*="flex-col"]');
+        const screeningsLis = screeningsContainer.length > 0 ? screeningsContainer.find('li') : allLis;
+        console.log(`Screenings container found: ${screeningsContainer.length}, screenings <li> elements: ${screeningsLis.length}`);
+        
+        screeningsLis.each((index, element) => {
             if (screenings.length >= 20) return false; // Stop after 20 screenings
             
             const $li = $(element);
             const $time = $li.find('time[datetime]').first();
             
             // Skip if no time tag found
-            if ($time.length === 0) return;
+            if ($time.length === 0) {
+                if (index < 5) console.log(`Skipping <li> ${index + 1}: no time[datetime] found`);
+                return;
+            }
             
             try {
                 // Extract time from <time> tag
-                const timeText = $time.text().trim(); // "Saturday 31 January 2026 | 18.30 - 20.03"
-                const datetimeAttr = $time.attr('datetime'); // "2026-01-31 18:30"
+                const timeText = $time.text().trim(); // "Saturday 31 January 2026 | 18.30 - 20.03" or "zaterdag 31 januari 2026 | 19.45 - 22.57"
+                const datetimeAttr = $time.attr('datetime'); // "2026-01-31 18:30" or "2026-01-31 19:45"
                 
-                // Parse the time text to get start and end times
-                const timePattern = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\s*\|\s*(\d{2})\.(\d{2})\s*-\s*(\d{2})\.(\d{2})/i;
+                // Use datetime attribute as primary source (more reliable than parsing text)
+                let startDate, endDate;
+                
+                if (datetimeAttr) {
+                    // Parse datetime attribute: "2026-01-31 19:45"
+                    const datetimeMatch = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+                    if (datetimeMatch) {
+                        const [, year, month, day, hour, minute] = datetimeMatch;
+                        startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+                    }
+                }
+                
+                // Parse end time from text: "19.45 - 22.57" or "18.30 - 20.03"
+                // Support both English and Dutch day/month names for fallback
+                const timePattern = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Maandag|Dinsdag|Woensdag|Donderdag|Vrijdag|Zaterdag|Zondag)\s+(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December|januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+(\d{4})\s*\|\s*(\d{1,2})\.(\d{2})\s*-\s*(\d{1,2})\.(\d{2})/i;
                 const timeMatch = timeText.match(timePattern);
                 
-                if (!timeMatch) {
-                    console.log(`Screening ${index + 1}: Could not parse time text: ${timeText}`);
+                if (timeMatch) {
+                    const [, day, date, month, year, startHour, startMin, endHour, endMin] = timeMatch;
+                    const monthIndex = monthMap[month.toLowerCase()];
+                    if (monthIndex !== undefined) {
+                        // Use parsed text if datetime attr failed or as validation
+                        if (!startDate) {
+                            startDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(startHour), parseInt(startMin));
+                        }
+                        endDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(endHour), parseInt(endMin));
+                    }
+                } else if (!startDate) {
+                    // Fallback: if both datetime attr and text parsing failed, log and skip
+                    console.log(`Screening ${index + 1}: Could not parse time text: ${timeText}, datetime: ${datetimeAttr}`);
                     return;
                 }
                 
-                const [, day, date, month, year, startHour, startMin, endHour, endMin] = timeMatch;
-                const monthIndex = monthMap[month.toLowerCase()];
-                if (monthIndex === undefined) {
-                    console.error(`Screening ${index + 1}: Invalid month: ${month}`);
-                    return;
+                // If we have startDate from datetime but no endDate, try to parse just the end time
+                if (startDate && !endDate) {
+                    const endTimeMatch = timeText.match(/\|\s*\d{1,2}\.\d{2}\s*-\s*(\d{1,2})\.(\d{2})/);
+                    if (endTimeMatch) {
+                        const [, endHour, endMin] = endTimeMatch;
+                        endDate = new Date(startDate);
+                        endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                    }
                 }
                 
-                const startDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(startHour), parseInt(startMin));
-                const endDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(endHour), parseInt(endMin));
+                // Final fallback: if we still don't have dates, skip this screening
+                if (!startDate || !endDate) {
+                    console.log(`Screening ${index + 1}: Could not determine start/end times. Text: ${timeText}, datetime: ${datetimeAttr}`);
+                    return;
+                }
                 
                 // Validate dates
                 if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
@@ -264,7 +310,10 @@ app.post('/api/iffr/parse', async (req, res) => {
                 const isAvailable = !isPressIndustry && !isSoldOut;
                 const unavailableReason = isPressIndustry ? 'Press & Industry' : (isSoldOut ? 'Sold Out' : null);
                 
-                console.log(`✓ Parsed screening ${index + 1}: ${day} ${date} ${month} ${year} | ${startHour}.${startMin} - ${endHour}.${endMin} | Location: ${location} | Q&A: ${hasQA}`);
+                const startDateStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const startTimeStr = startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const endTimeStr = endDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                console.log(`✓ Parsed screening ${index + 1}: ${startDateStr} | ${startTimeStr} - ${endTimeStr} | Location: ${location} | Q&A: ${hasQA}`);
                 console.log(`  Films in this screening: ${filmsInScreening.length} - ${filmsInScreening.join(', ')}`);
                 console.log(`  Available: ${isAvailable}, Reason: ${unavailableReason}`);
                 
@@ -357,6 +406,62 @@ app.post('/api/iffr/parse', async (req, res) => {
         }
         console.log('=======================\n');
         
+        // If we somehow didn't parse any screenings, try a safe fallback using the first <time datetime> on the page
+        let finalScreenings = screenings;
+        if (finalScreenings.length === 0) {
+            try {
+                const $firstTime = $('time[datetime]').first();
+                if ($firstTime.length > 0) {
+                    const datetimeAttr = $firstTime.attr('datetime'); // e.g. "2026-01-31 19:45"
+                    const text = $firstTime.text().trim(); // e.g. "zaterdag 31 januari 2026 | 19.45 - 22.57"
+                    
+                    let startDate, endDate;
+                    
+                    // Parse start from datetime attribute
+                    if (datetimeAttr) {
+                        const m = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+                        if (m) {
+                            const [, year, month, day, hour, minute] = m;
+                            startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+                        }
+                    }
+                    
+                    // Parse end time from text "19.45 - 22.57"
+                    const endMatch = text.match(/\|\s*\d{1,2}\.\d{2}\s*-\s*(\d{1,2})\.(\d{2})/);
+                    if (startDate && endMatch) {
+                        const [, endHour, endMin] = endMatch;
+                        endDate = new Date(startDate);
+                        endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                    }
+                    
+                    if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                        finalScreenings = [{
+                            startTime: startDate.toISOString(),
+                            endTime: endDate.toISOString(),
+                            location: '',
+                            link: url,
+                            note: 'Parsed from first time element; location may be missing'
+                        }];
+                        console.log('Fallback: created screening from first <time> element instead of using today as default.');
+                    }
+                }
+            } catch (e) {
+                console.error('Error while building fallback screening from first <time> element:', e);
+            }
+            
+            // Absolute last resort: keep the simple 120-minute block starting now,
+            // but this should rarely be used after the above logic.
+            if (finalScreenings.length === 0) {
+                finalScreenings = [{
+                    startTime: new Date().toISOString(),
+                    endTime: new Date(Date.now() + 120 * 60 * 1000).toISOString(), // Default 120 minutes
+                    location: '',
+                    link: url,
+                    note: 'No screenings found - please add manually'
+                }];
+            }
+        }
+        
         res.json({
             title: title,
             director: director,
@@ -366,13 +471,7 @@ app.post('/api/iffr/parse', async (req, res) => {
             isEventPage: isEventPage, // Indicates this is a programme/event page, not an individual film
             isCombinedProgramme: finalIsCombined, // Event pages are always combined programmes
             combinedFilms: combinedFilms,
-            screenings: screenings.length > 0 ? screenings : [{
-                startTime: new Date().toISOString(),
-                endTime: new Date(Date.now() + 120 * 60 * 1000).toISOString(), // Default 120 minutes
-                location: '',
-                link: url,
-                note: 'No screenings found - please add manually'
-            }]
+            screenings: finalScreenings
         });
     } catch (error) {
         console.error('IFFR parse error:', error);
