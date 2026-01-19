@@ -46,6 +46,18 @@ Connect your Notion database to sync films across devices.
 
 ### Step 2: Create a Notion Database
 
+**Option A: Import the CSV template (Easiest) ⭐**
+
+1. Download the template: [Film-planner-database-template-csv.csv](../Film-planner-database-template-csv.csv)
+2. In Notion, create a new page or go to an existing page
+3. Type `/table` and select **"Table - Inline"** or **"Table - Full page"**
+4. Click **"..."** (three dots) in the top right of the table
+5. Select **"Import"** → **"CSV"**
+6. Upload the CSV file
+7. Notion will create a database with all the right properties already configured!
+
+**Option B: Create manually**
+
 1. In Notion, create a new page or go to an existing page
 2. Type `/database` and select **"Table - Inline"** or **"Table - Full page"**
 3. Name your database (e.g., "IFFR Films")

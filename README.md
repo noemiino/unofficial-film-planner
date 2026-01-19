@@ -21,12 +21,25 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
 
 ## Quick Start
 
-### Option 1: Just Use It Locally (Simplest)
+### Option 1: Use the Live Version (Easiest) ⭐
+
+**Just use it online - no setup needed!**
+
+1. **Open the app**: [https://unofficial-film-planner-production.up.railway.app](https://unofficial-film-planner-production.up.railway.app)
+2. **Optional: Set up Notion sync** (see [SETUP_NOTION.md](./SETUP_NOTION.md)):
+   - Use the [Notion Database Template](#notion-database-template) (duplicate it to get started)
+   - Create a Notion integration
+   - Add your API key and Database ID in Settings
+3. Start adding films!
+
+**That's it!** The app works in your browser, and you can access it from your phone too.
+
+### Option 2: Just Use It Locally (No Server)
 
 1. Clone this repo:
    ```bash
-   git clone https://github.com/yourusername/film-festival-tool.git
-   cd film-festival-tool
+   git clone https://github.com/noemiino/unofficial-film-planner.git
+   cd unofficial-film-planner
    ```
 
 2. Open `index.html` in your browser
@@ -34,7 +47,7 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
 
 **That's it!** No server needed for basic use.
 
-### Option 2: Full Setup (With Sharing & Phone Access)
+### Option 3: Deploy Your Own Instance
 
 1. **Install dependencies:**
    ```bash
@@ -52,10 +65,10 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
    - **Vercel** (easiest - free, 2 minutes)
    - **Render** (free tier available)
 
-4. **Optional: Set up Notion sync** (see [SETUP.md](./SETUP.md)):
+4. **Optional: Set up Notion sync** (see [SETUP_NOTION.md](./SETUP_NOTION.md)):
+   - Use the [Notion Database Template](#notion-database-template) (duplicate it to get started)
    - Create a Notion integration
-   - Create a database
-   - Add your API key in Settings
+   - Add your API key and Database ID in Settings
 
 ## Sharing Your Schedule
 
@@ -65,10 +78,35 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
 4. Share with others - they'll see your schedule in read-only mode
 5. The link will always show an updated view of your schedule
 
+## Notion Database Template
+
+To make setup easier, you can import a pre-configured Notion database:
+
+1. **Download the template**: [Film-planner-database-template-csv.csv](./Film-planner-database-template-csv.csv)
+   - This CSV file contains all the database properties already configured
+
+2. **Import into Notion**:
+   - In Notion, create a new page or go to an existing page
+   - Type `/table` and select "Table - Inline" or "Table - Full page"
+   - Click "..." (three dots) in the top right of the table
+   - Select "Import" → "CSV"
+   - Upload the `Film-planner-database-template-csv.csv` file
+   - Notion will create a database with all the right properties (Title, Start Time, End Time, Director, Country, Programme, Location, etc.)
+
+3. **Share with your integration**:
+   - Open your imported database
+   - Click "..." → "Connections" → Add your integration
+
+4. **Get your Database ID** from the URL (see [SETUP_NOTION.md](./SETUP_NOTION.md) for details)
+
+5. **Add to the app**: Settings → Paste your API key and Database ID → Save & Sync
+
+**Note**: The CSV template includes all required properties (Title, Start Time, End Time) and optional ones (Director, Country, Programme, Location, etc.) so you can start using it immediately. You can delete the test row after importing.
+
 ## Documentation
 
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Deploy the server, access from phone, share schedules
-- **[SETUP.md](./SETUP.md)** - Set up Notion integration (optional)
+- **[SETUP_NOTION.md](./SETUP_NOTION.md)** - Set up Notion integration (optional)
 
 ## For Developers
 
