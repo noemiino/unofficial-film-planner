@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>IFFR Film Festival Planner</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Aggressive inline override for h1 color - must be black */
+        header h1 {
+            color: #000000 !important;
+            color: rgb(0, 0, 0) !important;
+            -webkit-text-fill-color: #000000 !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+        }
+        @media (prefers-color-scheme: dark) {
+            header h1 {
+                color: #000000 !important;
+                color: rgb(0, 0, 0) !important;
+                -webkit-text-fill-color: #000000 !important;
+                filter: none !important;
+                -webkit-filter: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://iffr.com/en/wp-content/themes/iffr/dist/images/iffr-logo.svg" alt="IFFR Logo" class="iffr-logo">
+            <div class="header-title-group">
+                <h1>Unofficial Film Planner</h1>
+                <div id="user-schedule-subtitle" class="user-schedule-subtitle" style="display: none;"></div>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="controls-left">
+                <button id="add-film-btn" class="btn-primary">Add Film</button>
+                <button id="manual-add-btn" class="btn-secondary">Manual Entry</button>
+                <button id="settings-btn" class="btn-secondary">⚙️ Settings</button>
+            </div>
+            <div class="controls-center">
+                <!-- Favorites will be moved here on mobile -->
+            </div>
+            <div class="controls-right">
+                <div class="date-navigation-group">
+                    <span id="date-range"></span>
+                    <div class="nav-buttons-group">
+                        <button id="prev-days" class="calendar-nav-btn"><</button>
+                        <button id="next-days" class="calendar-nav-btn">></button>
+                    </div>
+                </div>
+               
+            </div>
+        </div>
+
+        <div class="main-content-wrapper">
+            <!-- Left Sidebar for Unscheduled Favorites -->
+            <aside id="favorites-sidebar" class="favorites-sidebar">
+                <div class="sidebar-header">
+                    <h3>Favorites</h3>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="favorites-count" class="favorites-count">0</span>
+                        <button id="toggle-favorites-btn" class="sidebar-toggle-btn" title="Collapse/Expand">
+                            <span class="toggle-icon toggle-icon-desktop">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 172.7 173.2" class="sidebar-icon-svg">
+                                    <path d="M170,141c0,15.4-12,29.6-27.7,29.6H30.4c-15.6,0-27.3-14.5-27.2-29.4V31.7c.2-15.6,13.8-28.2,29.2-28.2h107.9c16.2,0,29.6,12.8,29.7,29.2v108.3ZM31.8,159h23.5s0-143.6,0-143.6h-22c-9.8,0-17.8,6.9-18.4,16.9v108.4c-.2,9.7,7.1,18.3,16.9,18.3ZM158.2,141.5V32.8c-.5-9.9-8-17.4-18-17.4h-73.1s0,143.6,0,143.6h74.1c9.5,0,16.7-8.1,17-17.6Z"/>
+                                    <path d="M45.4,62.9h-22c-3.3,0-6-2.7-6-6s2.7-6,6-6h22c3.3,0,6,2.7,6,6s-2.7,6-6,6Z"/>
+                                    <path d="M45.4,80.5h-22c-3.3,0-6-2.7-6-6s2.7-6,6-6h22c3.3,0,6,2.7,6,6s-2.7,6-6,6Z"/>
+                                    <path d="M45.4,98.5h-22c-3.3,0-6-2.7-6-6s2.7-6,6-6h22c3.3,0,6,2.7,6,6s-2.7,6-6,6Z"/>
+                                </svg>
+                            </span>
+                            <span class="toggle-icon toggle-icon-mobile">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 172.7 173.2" class="sidebar-icon-svg sidebar-icon-svg-mobile">
+                                    <path d="M170,141c0,15.4-12,29.6-27.7,29.6H30.4c-15.6,0-27.3-14.5-27.2-29.4V31.7c.2-15.6,13.8-28.2,29.2-28.2h107.9c16.2,0,29.6,12.8,29.7,29.2v108.3ZM31.8,159h23.5s0-143.6,0-143.6h-22c-9.8,0-17.8,6.9-18.4,16.9v108.4c-.2,9.7,7.1,18.3,16.9,18.3ZM158.2,141.5V32.8c-.5-9.9-8-17.4-18-17.4h-73.1s0,143.6,0,143.6h74.1c9.5,0,16.7-8.1,17-17.6Z"/>
+                                    <path d="M45.4,62.9h-22c-3.3,0-6-2.7-6-6s2.7-6,6-6h22c3.3,0,6,2.7,6,6s-2.7,6-6,6Z"/>
+                                    <path d="M45.4,80.5h-22c-3.3,0-6-2.7-6-6s2.7-6,6-6h22c3.3,0,6,2.7,6,6s-2.7,6-6,6Z"/>
+                                    <path d="M45.4,98.5h-22c-3.3,0-6-2.7-6-6s2.7-6,6-6h22c3.3,0,6,2.7,6,6s-2.7,6-6,6Z"/>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div id="favorites-list" class="favorites-list">
+                    <!-- Unscheduled favorite films will appear here -->
+                </div>
+            </aside>
+
+            <div id="calendar" class="calendar">
+            <!-- Calendar will be generated here -->
+            <!-- Film Detail Panel (integrated into calendar) -->
+            <div id="film-detail-modal">
+                <div class="modal-content">
+                    <span class="close" id="close-detail">&times;</span>
+                    <h2 id="detail-title"></h2>
+                    <div id="film-details"></div>
+                    <div class="detail-actions">
+                        <button id="delete-film-btn" class="btn-secondary" style="background: var(--red);">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Add Film Modal -->
+    <div id="film-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add Film</h2>
+            <div id="iffr-mode">
+                <form id="film-form">
+                    <label>
+                        IFFR Link:
+                        <input type="url" id="iffr-link" placeholder="https://iffr.com/..." required>
+                    </label>
+                    <button type="submit" class="btn-primary">Parse & Add</button>
+                </form>
+                <div id="parse-results"></div>
+                <div id="add-to-favorites-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: none;">
+                    <button type="button" id="add-to-favorites-btn" class="btn-secondary" style="width: 100%;">
+                        ❤️ Add to Favorites (Don't Schedule)
+                    </button>
+                </div>
+            </div>
+            <div id="manual-mode" style="display: none;">
+                <form id="manual-film-form">
+                    <label>
+                        Title: <input type="text" id="manual-title" required>
+                    </label>
+                    <label>
+                        <div style="display: flex; align-items: center; gap: 6px; cursor: pointer; margin-top: 8px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                            <input type="checkbox" id="manual-unavailable" style="width: auto; margin: 0;">
+                            <span>🚫 Mark as Unavailable Time (Other commitments)</span>
+                        </div>
+                    </label>
+                    <label class="unavailable-disabled">
+                        Director: <input type="text" id="manual-director">
+                    </label>
+                    <label class="unavailable-disabled">
+                        Country: <input type="text" id="manual-country">
+                    </label>
+                    <label class="unavailable-disabled">
+                        Programme:
+                        <select id="manual-programme">
+                            <option value="">Select...</option>
+                            <option value="Harbour">Harbour</option>
+                            <option value="Short & Mid-length">Short & Mid-length</option>
+                            <option value="Limelight">Limelight</option>
+                            <option value="Bright Future">Bright Future</option>
+                            <option value="RTM">RTM</option>
+                            <option value="Cinema Regained">Cinema Regained</option>
+                            <option value="Big Screen Competition ">Big Screen Competition </option>
+                        </select>
+                    </label>
+                    <label>
+                        Date: <input type="date" id="manual-date" required>
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <label>
+                            Start Time: <input type="time" id="manual-start-time" required>
+                        </label>
+                        <label>
+                            End Time: <input type="time" id="manual-end-time" required>
+                        </label>
+                    </div>
+                    <label class="unavailable-disabled">
+                        Location:
+                        <select id="manual-location">
+                            <option value="">Select location...</option>
+                            <option value="de Doelen & de Doelen Studios">de Doelen & de Doelen Studios</option>
+                            <option value="Pathé Schouwburgplein">Pathé Schouwburgplein</option>
+                            <option value="Theater Rotterdam">Theater Rotterdam</option>
+                            <option value="Cinerama Filmtheater">Cinerama Filmtheater</option>
+                            <option value="Oude Luxor">Oude Luxor</option>
+                            <option value="KINO">KINO</option>
+                            <option value="LantarenVenster">LantarenVenster</option>
+                            <option value="Fenix / Plein">Fenix / Plein</option>
+                            <option value="Nieuwe Luxor">Nieuwe Luxor</option>
+                            <option value="WORM CS & WORM UBIK">WORM CS & WORM UBIK</option>
+                            <option value="V2_Lab for Unstable Media">V2_Lab for Unstable Media</option>
+                            <option value="Nieuwe Instituut">Nieuwe Instituut</option>
+                            <option value="Stationshal Rotterdam Centraal">Stationshal Rotterdam Centraal</option>
+                            <option value="Brutus">Brutus</option>
+                            <option value="Katoenhuis">Katoenhuis</option>
+                            <option value="Podium Islemunda">Podium Islemunda</option>
+                            <option value="Roodkapje">Roodkapje</option>
+                            <option value="Muziekwerf">Muziekwerf</option>
+                        </select>
+                    </label>
+                    <label class="unavailable-disabled">
+                        Room/Number (optional): <input type="text" id="manual-room" placeholder="e.g., 2, 1, etc.">
+                    </label>
+                    <label class="unavailable-disabled">
+                        IFFR Link: <input type="url" id="manual-link" placeholder="https://iffr.com/...">
+                    </label>
+                    <label class="unavailable-disabled">
+                        Status:
+                        <div style="display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" id="manual-favorited" style="width: auto; margin: 0;">
+                                <span>❤️ Favorited</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" id="manual-ticket" style="width: auto; margin: 0;">
+                                <span>🎫 Ticket</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" id="manual-moderating" style="width: auto; margin: 0;">
+                                <span>M Moderating</span>
+                            </label>
+                        </div>
+                    </label>
+                    <button type="submit" class="btn-primary">Add Film</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-settings">&times;</span>
+            <h2>Settings</h2>
+            <form id="settings-form">
+                <label>
+                    Your Name:
+                    <input type="text" id="user-name" placeholder="Enter your name">
+                </label>
+                <label>
+                    Notion API Key:
+                    <input type="password" id="notion-api-key" placeholder="secret_...">
+                    <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 4px; font-size: 11px;">
+                        <a href="https://www.notion.so/my-integrations" target="_blank" style="color: var(--teal);">Get from Notion Integration Secret</a>
+                    </small>
+                </label>
+                <label>
+                    Notion Database ID:
+                    <input type="text" id="notion-database-id" placeholder="database-id-here">
+                    <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 4px; font-size: 11px;">
+                        Found in your database URL after notion.so/workspace/
+                    </small>
+                </label>
+                <label>
+                    Backend Server URL:
+                    <input type="text" id="backend-url" placeholder="https://your-server.com or leave empty">
+                    <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 4px; font-size: 11px;">
+                        Leave empty for auto-detect. Set for remote access.
+                    </small>
+                </label>
+                <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+                    <button type="submit" class="btn-primary">Save & Sync</button>
+                    <button type="button" id="test-notion-btn" class="btn-secondary">Test Connection</button>
+                    <button type="button" id="share-schedule-btn" class="btn-secondary">🔗 Share Schedule</button>
+                </div>
+                <div id="notion-status" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
+                <div id="share-status" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
+            </form>
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                <p style="font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; margin: 0 0 8px 0;">
+                    Made by <a href="https://www.instagram.com/noemi__biro/?hl=en" target="_blank" rel="noopener noreferrer" style="color: var(--teal); text-decoration: none;">Noémi Biró</a> for personal use, available for fellow film festival nerds <a href="https://github.com/yourusername/film-festival-tool" target="_blank" rel="noopener noreferrer" style="color: var(--teal); text-decoration: none;">here</a> 🎬
+                </p>
+                <p style="font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; margin: 0;">
+                    ☕ <a href="https://buymeacoffee.com/noemibiro" target="_blank" rel="noopener noreferrer" style="color: var(--teal); text-decoration: none;">Buy me a coffee</a> if you'd like me to share similar small tools
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
