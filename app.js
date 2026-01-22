@@ -469,7 +469,8 @@ class FilmFestivalPlanner {
                 unavailable: getCheckbox(props['Unavailable'] || props['unavailable']),
                 screenings: screenings.length > 0 ? screenings : [], // Store all screenings for this film
                 isCombinedProgramme: isCombinedProgramme,
-                combinedFilms: combinedFilms
+                combinedFilms: combinedFilms,
+                notes: getText(props['Notes'] || props['notes']) || '' // Load notes if available
             };
         }).filter(film => film.title); // Only include films with titles
     }
@@ -1798,6 +1799,10 @@ class FilmFestivalPlanner {
                 document.querySelectorAll('.screening-option').forEach(opt => opt.classList.remove('selected'));
                 option.classList.add('selected');
                 
+                // Get notes from input field
+                const notesInput = document.getElementById('iffr-notes');
+                const notes = notesInput ? notesInput.value.trim() : '';
+                
                 // Add film with selected screening
                 const film = {
                     ...filmData,
@@ -1812,7 +1817,8 @@ class FilmFestivalPlanner {
                     ticket: false,
                     screenings: allScreenings, // Store all screenings for switching later
                     isCombinedProgramme: filmData.isCombinedProgramme || false,
-                    combinedFilms: filmData.combinedFilms || []
+                    combinedFilms: filmData.combinedFilms || [],
+                    notes: notes || '' // Add notes if provided
                 };
                 
                 this.films.push(film);
@@ -1865,6 +1871,10 @@ class FilmFestivalPlanner {
         // Ensure IFFR link is included - get it from input field if not in filmData
         const linkInput = document.getElementById('iffr-link');
         const iffrLink = filmData.iffrLink || (linkInput ? linkInput.value : null);
+        
+        // Get notes from input field
+        const notesInput = document.getElementById('iffr-notes');
+        const notes = notesInput ? notesInput.value.trim() : '';
 
         // Debug: log what we're storing
         console.log('Adding to favorites:', {
@@ -1888,7 +1898,8 @@ class FilmFestivalPlanner {
             ticket: false,
             screenings: allScreenings, // Store all screenings for later scheduling
             isCombinedProgramme: filmData.isCombinedProgramme || false,
-            combinedFilms: filmData.combinedFilms || []
+            combinedFilms: filmData.combinedFilms || [],
+            notes: notes || '' // Add notes if provided
         };
         
         // Debug: verify IFFR link is in film object
@@ -2344,6 +2355,11 @@ class FilmFestivalPlanner {
                 updates['Screenings'] = JSON.stringify(film.screenings);
             }
             
+            // Store notes if available
+            if (film.notes) {
+                updates['Notes'] = film.notes;
+            }
+            
             // Store combined programme data if available
             if (film.isCombinedProgramme && film.combinedFilms && film.combinedFilms.length > 0) {
                 updates['Combined Programme'] = JSON.stringify({
@@ -2509,6 +2525,8 @@ class FilmFestivalPlanner {
             document.getElementById('manual-mode').style.display = 'none';
             document.getElementById('modal-title').textContent = 'Add Film from IFFR Link';
             document.getElementById('iffr-link').value = '';
+            const notesInput = document.getElementById('iffr-notes');
+            if (notesInput) notesInput.value = '';
             document.getElementById('parse-results').innerHTML = '';
             // Hide "Add to Favorites" button initially
             const addToFavoritesSection = document.getElementById('add-to-favorites-section');
@@ -2532,6 +2550,8 @@ class FilmFestivalPlanner {
             document.getElementById('manual-moderating').checked = false;
             document.getElementById('manual-unavailable').checked = false;
             document.getElementById('manual-title').value = '';
+            const manualNotesInput = document.getElementById('manual-notes');
+            if (manualNotesInput) manualNotesInput.value = '';
             // Reset unavailable state
             this.handleUnavailableToggle({ target: { checked: false } });
         }
@@ -2595,6 +2615,9 @@ class FilmFestivalPlanner {
         const isUnavailable = document.getElementById('manual-unavailable').checked;
         const title = document.getElementById('manual-title').value || (isUnavailable ? 'Unavailable for IFFR' : '');
         
+        const notesInput = document.getElementById('manual-notes');
+        const notes = notesInput ? notesInput.value.trim() : '';
+        
         const film = {
             id: Date.now(),
             title: title,
@@ -2608,7 +2631,8 @@ class FilmFestivalPlanner {
             moderating: document.getElementById('manual-moderating').checked,
             favorited: document.getElementById('manual-favorited').checked,
             ticket: document.getElementById('manual-ticket').checked,
-            unavailable: isUnavailable
+            unavailable: isUnavailable,
+            notes: notes || '' // Add notes if provided
         };
         
         this.films.push(film);

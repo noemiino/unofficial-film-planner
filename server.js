@@ -597,6 +597,13 @@ app.post('/api/notion/create', async (req, res) => {
         } else {
             console.log('No screenings to save for film:', film.title);
         }
+        
+        // Store notes if provided
+        if (film.notes) {
+            properties['Notes'] = {
+                'rich_text': [{ 'text': { 'content': film.notes } }]
+            };
+        }
 
         const response = await fetch(`https://api.notion.com/v1/pages`, {
             method: 'POST',
@@ -704,6 +711,11 @@ app.post('/api/notion/update', async (req, res) => {
         if (updates['Screenings']) {
             properties['Screenings'] = {
                 'rich_text': [{ 'text': { 'content': typeof updates['Screenings'] === 'string' ? updates['Screenings'] : JSON.stringify(updates['Screenings']) } }]
+            };
+        }
+        if (updates['Notes']) {
+            properties['Notes'] = {
+                'rich_text': [{ 'text': { 'content': updates['Notes'] } }]
             };
         }
         
@@ -834,6 +846,13 @@ app.post('/api/notion/create', async (req, res) => {
         } else {
             console.log('No screenings to save for film:', film.title);
         }
+        
+        // Store notes if provided
+        if (film.notes) {
+            properties['Notes'] = {
+                'rich_text': [{ 'text': { 'content': film.notes } }]
+            };
+        }
 
         const response = await fetch(`https://api.notion.com/v1/pages`, {
             method: 'POST',
@@ -941,6 +960,11 @@ app.post('/api/notion/update', async (req, res) => {
         if (updates['Screenings']) {
             properties['Screenings'] = {
                 'rich_text': [{ 'text': { 'content': typeof updates['Screenings'] === 'string' ? updates['Screenings'] : JSON.stringify(updates['Screenings']) } }]
+            };
+        }
+        if (updates['Notes']) {
+            properties['Notes'] = {
+                'rich_text': [{ 'text': { 'content': updates['Notes'] } }]
             };
         }
         

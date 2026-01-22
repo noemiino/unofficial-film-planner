@@ -100,6 +100,10 @@
                         IFFR Link:
                         <input type="url" id="iffr-link" placeholder="https://iffr.com/..." required>
                     </label>
+                    <label>
+                        Notes (optional):
+                        <textarea id="iffr-notes" placeholder="Add notes about why you want to see this film..." rows="3" style="resize: vertical;"></textarea>
+                    </label>
                     <button type="submit" class="btn-primary">Parse & Add</button>
                 </form>
                 <div id="parse-results"></div>
@@ -196,6 +200,10 @@
                                 <span>M Moderating</span>
                             </label>
                         </div>
+                    </label>
+                    <label class="unavailable-disabled">
+                        Notes (optional):
+                        <textarea id="manual-notes" placeholder="Add notes about why you want to see this film..." rows="3" style="resize: vertical;"></textarea>
                     </label>
                     <button type="submit" class="btn-primary">Add Film</button>
                 </form>
