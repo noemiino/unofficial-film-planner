@@ -180,43 +180,13 @@ app.post('/api/iffr/parse', async (req, res) => {
         const screenings = [];
         const $ = cheerio.load(html);
         
-        // Helper function to create a Date in Europe/Amsterdam timezone and convert to UTC
-        // IFFR times are displayed in CET/CEST (Europe/Amsterdam timezone)
+        // Helper function: IFFR times are in Amsterdam timezone (CET = UTC+1)
+        // Simple fix: create date as UTC, then subtract 1 hour to convert from CET to UTC
         function createDateInAmsterdamTimezone(year, month, day, hour, minute) {
-            // Determine if DST (CEST = UTC+2) or standard time (CET = UTC+1)
-            // DST in Europe: last Sunday in March (2:00 AM) to last Sunday in October (3:00 AM)
-            const monthNum = month - 1; // JavaScript months are 0-indexed
-            let isDST = false;
-            
-            // Check if date is in DST period
-            if (monthNum >= 3 && monthNum <= 8) {
-                // April through September are definitely DST
-                isDST = true;
-            } else if (monthNum === 2) { // March
-                // DST starts last Sunday of March at 2:00 AM
-                // Find last Sunday of March
-                const lastDay = new Date(year, 2, 31); // March 31
-                const dayOfWeek = lastDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
-                const lastSunday = 31 - dayOfWeek; // Last Sunday date
-                isDST = day >= lastSunday;
-            } else if (monthNum === 9) { // October
-                // DST ends last Sunday of October at 3:00 AM
-                // Find last Sunday of October
-                const lastDay = new Date(year, 9, 31); // October 31
-                const dayOfWeek = lastDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
-                const lastSunday = 31 - dayOfWeek; // Last Sunday date
-                isDST = day < lastSunday;
-            }
-            // January, February, November, December are always CET (UTC+1)
-            
-            // Create date string with appropriate timezone offset
-            // CET = UTC+1, CEST = UTC+2
-            const offset = isDST ? 2 : 1;
-            const offsetStr = `+0${offset}:00`;
-            const isoString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00${offsetStr}`;
-            
-            // Parse the ISO string which will correctly convert to UTC
-            return new Date(isoString);
+            // Create date in UTC (month is 0-indexed in Date.UTC)
+            const utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute));
+            // Subtract 1 hour: 18:15 CET = 17:15 UTC
+            return new Date(utcDate.getTime() - 60 * 60 * 1000);
         }
         
         // Support both English and Dutch month names
