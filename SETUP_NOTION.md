@@ -83,6 +83,7 @@ Your database needs these properties (exact names or variations work):
 - **Moderating** (Checkbox property)
 - **Unavailable** (Checkbox property) - Marks time slots as unavailable (other commitments)
 - **Screenings** (Text/Rich Text property) - Stores all available screenings as JSON (for films with multiple screening times)
+- **Notes** (Text/Rich Text property) - Personal notes about why you want to see the film
 
 **Property Name Variations:**
 The app will recognize these variations:
