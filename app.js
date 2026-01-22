@@ -2126,7 +2126,7 @@ class FilmFestivalPlanner {
         this.scrollModalIntoView();
     }
 
-    switchFilmScreening(filmId, screeningIndex) {
+    async switchFilmScreening(filmId, screeningIndex) {
         // Prevent switching screenings in shared view
         if (this.isSharedView) {
             alert('Cannot change screenings in shared view. This is a read-only schedule.');
@@ -2134,8 +2134,39 @@ class FilmFestivalPlanner {
         }
         
         const film = this.films.find(f => String(f.id) === String(filmId));
-        if (!film || !film.screenings || !film.screenings[screeningIndex]) {
-            console.error('Film or screening not found');
+        if (!film) {
+            console.error('Film not found');
+            return;
+        }
+
+        // Re-parse IFFR link to get updated screening information (availability, sold out status, etc.)
+        if (film.iffrLink) {
+            try {
+                const filmData = await this.parseIFFRLink(film.iffrLink);
+                // Update screenings with fresh data
+                film.screenings = filmData.screenings || film.screenings;
+                // Also update other film data that might have changed
+                if (filmData.director && !film.director) {
+                    film.director = filmData.director;
+                }
+                if (filmData.country && !film.country) {
+                    film.country = filmData.country;
+                }
+                if (filmData.programme && !film.programme) {
+                    film.programme = filmData.programme;
+                }
+                this.saveFilms();
+            } catch (error) {
+                console.error('Failed to re-parse IFFR link:', error);
+                // Continue with existing screenings if re-parsing fails
+            }
+        }
+
+        // Check if screening still exists after re-parsing
+        if (!film.screenings || !film.screenings[screeningIndex]) {
+            alert('This screening is no longer available. Please select a different screening.');
+            // Re-render the detail modal to show updated screenings
+            this.showFilmDetail(film);
             return;
         }
 
@@ -2151,7 +2182,7 @@ class FilmFestivalPlanner {
         film.startTime = screening.startTime;
         film.endTime = screening.endTime;
         film.location = screening.location;
-        film.iffrLink = screening.link;
+        film.iffrLink = screening.link || film.iffrLink;
         film.hasQA = screening.hasQA || false;
         
         this.saveFilms();
