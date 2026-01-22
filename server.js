@@ -180,6 +180,45 @@ app.post('/api/iffr/parse', async (req, res) => {
         const screenings = [];
         const $ = cheerio.load(html);
         
+        // Helper function to create a Date in Europe/Amsterdam timezone and convert to UTC
+        // IFFR times are displayed in CET/CEST (Europe/Amsterdam timezone)
+        function createDateInAmsterdamTimezone(year, month, day, hour, minute) {
+            // Determine if DST (CEST = UTC+2) or standard time (CET = UTC+1)
+            // DST in Europe: last Sunday in March (2:00 AM) to last Sunday in October (3:00 AM)
+            const monthNum = month - 1; // JavaScript months are 0-indexed
+            let isDST = false;
+            
+            // Check if date is in DST period
+            if (monthNum >= 3 && monthNum <= 8) {
+                // April through September are definitely DST
+                isDST = true;
+            } else if (monthNum === 2) { // March
+                // DST starts last Sunday of March at 2:00 AM
+                // Find last Sunday of March
+                const lastDay = new Date(year, 2, 31); // March 31
+                const dayOfWeek = lastDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                const lastSunday = 31 - dayOfWeek; // Last Sunday date
+                isDST = day >= lastSunday;
+            } else if (monthNum === 9) { // October
+                // DST ends last Sunday of October at 3:00 AM
+                // Find last Sunday of October
+                const lastDay = new Date(year, 9, 31); // October 31
+                const dayOfWeek = lastDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                const lastSunday = 31 - dayOfWeek; // Last Sunday date
+                isDST = day < lastSunday;
+            }
+            // January, February, November, December are always CET (UTC+1)
+            
+            // Create date string with appropriate timezone offset
+            // CET = UTC+1, CEST = UTC+2
+            const offset = isDST ? 2 : 1;
+            const offsetStr = `+0${offset}:00`;
+            const isoString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00${offsetStr}`;
+            
+            // Parse the ISO string which will correctly convert to UTC
+            return new Date(isoString);
+        }
+        
         // Support both English and Dutch month names
         const monthMap = {
             // English
@@ -221,10 +260,17 @@ app.post('/api/iffr/parse', async (req, res) => {
                 
                 if (datetimeAttr) {
                     // Parse datetime attribute: "2026-01-31 19:45"
+                    // Times are in Europe/Amsterdam timezone (CET/CEST)
                     const datetimeMatch = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
                     if (datetimeMatch) {
                         const [, year, month, day, hour, minute] = datetimeMatch;
-                        startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+                        startDate = createDateInAmsterdamTimezone(
+                            parseInt(year), 
+                            parseInt(month), 
+                            parseInt(day), 
+                            parseInt(hour), 
+                            parseInt(minute)
+                        );
                     }
                 }
                 
@@ -238,10 +284,23 @@ app.post('/api/iffr/parse', async (req, res) => {
                     const monthIndex = monthMap[month.toLowerCase()];
                     if (monthIndex !== undefined) {
                         // Use parsed text if datetime attr failed or as validation
+                        // Times are in Europe/Amsterdam timezone (CET/CEST)
                         if (!startDate) {
-                            startDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(startHour), parseInt(startMin));
+                            startDate = createDateInAmsterdamTimezone(
+                                parseInt(year), 
+                                monthIndex + 1, // monthIndex is 0-based, but function expects 1-based
+                                parseInt(date), 
+                                parseInt(startHour), 
+                                parseInt(startMin)
+                            );
                         }
-                        endDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(endHour), parseInt(endMin));
+                        endDate = createDateInAmsterdamTimezone(
+                            parseInt(year), 
+                            monthIndex + 1, // monthIndex is 0-based, but function expects 1-based
+                            parseInt(date), 
+                            parseInt(endHour), 
+                            parseInt(endMin)
+                        );
                     }
                 } else if (!startDate) {
                     // Fallback: if both datetime attr and text parsing failed, log and skip
@@ -254,8 +313,33 @@ app.post('/api/iffr/parse', async (req, res) => {
                     const endTimeMatch = timeText.match(/\|\s*\d{1,2}\.\d{2}\s*-\s*(\d{1,2})\.(\d{2})/);
                     if (endTimeMatch) {
                         const [, endHour, endMin] = endTimeMatch;
-                        endDate = new Date(startDate);
-                        endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                        // Extract date components from startDate and create endDate in Amsterdam timezone
+                        const startYear = startDate.getUTCFullYear();
+                        const startMonth = startDate.getUTCMonth() + 1; // Convert to 1-based
+                        const startDay = startDate.getUTCDate();
+                        // Note: We need to get the local Amsterdam time, not UTC time
+                        // Since startDate is already in UTC, we need to work backwards
+                        // Get the Amsterdam time from the original datetime or text
+                        const dateMatch = datetimeAttr ? datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})/) : null;
+                        if (dateMatch) {
+                            const [, year, month, day] = dateMatch;
+                            endDate = createDateInAmsterdamTimezone(
+                                parseInt(year),
+                                parseInt(month),
+                                parseInt(day),
+                                parseInt(endHour),
+                                parseInt(endMin)
+                            );
+                        } else {
+                            // Fallback: use startDate's date components
+                            endDate = createDateInAmsterdamTimezone(
+                                startYear,
+                                startMonth,
+                                startDay,
+                                parseInt(endHour),
+                                parseInt(endMin)
+                            );
+                        }
                     }
                 }
                 
@@ -418,11 +502,18 @@ app.post('/api/iffr/parse', async (req, res) => {
                     let startDate, endDate;
                     
                     // Parse start from datetime attribute
+                    // Times are in Europe/Amsterdam timezone (CET/CEST)
                     if (datetimeAttr) {
                         const m = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
                         if (m) {
                             const [, year, month, day, hour, minute] = m;
-                            startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+                            startDate = createDateInAmsterdamTimezone(
+                                parseInt(year), 
+                                parseInt(month), 
+                                parseInt(day), 
+                                parseInt(hour), 
+                                parseInt(minute)
+                            );
                         }
                     }
                     
@@ -430,8 +521,18 @@ app.post('/api/iffr/parse', async (req, res) => {
                     const endMatch = text.match(/\|\s*\d{1,2}\.\d{2}\s*-\s*(\d{1,2})\.(\d{2})/);
                     if (startDate && endMatch) {
                         const [, endHour, endMin] = endMatch;
-                        endDate = new Date(startDate);
-                        endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                        // Extract date components from datetime attribute
+                        const dateMatch = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})/);
+                        if (dateMatch) {
+                            const [, year, month, day] = dateMatch;
+                            endDate = createDateInAmsterdamTimezone(
+                                parseInt(year),
+                                parseInt(month),
+                                parseInt(day),
+                                parseInt(endHour),
+                                parseInt(endMin)
+                            );
+                        }
                     }
                     
                     if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
