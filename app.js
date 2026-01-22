@@ -1193,6 +1193,7 @@ class FilmFestivalPlanner {
                 ${!isUnavailable && currentFilm.hasQA ? `<div class="detail-item"><strong>Q&A:</strong> Yes</div>` : ''}
                 ${!isUnavailable ? combinedProgrammeInfo : ''}
                 ${!isUnavailable && currentFilm.iffrLink ? `<div class="detail-item"><strong>IFFR Link:</strong> <a href="${currentFilm.iffrLink}" target="_blank" rel="noopener noreferrer" style="color: var(--teal); text-decoration: underline;">${currentFilm.iffrLink}</a></div>` : ''}
+                ${!isUnavailable && currentFilm.notes ? `<div class="detail-item"><strong>Notes:</strong> ${currentFilm.notes}</div>` : ''}
                 ${!isUnavailable ? screeningSwitcher : ''}
                 ${!isUnavailable ? `<div class="detail-item" id="status-section">
                     <div style="margin-bottom: 12px;">

@@ -1506,7 +1506,7 @@ form label {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Courier New', monospace;
 }
 
-form input, form select {
+form input, form select, form textarea {
     width: 100%;
     padding: 14px 16px;
     margin-top: 8px;
@@ -1520,16 +1520,22 @@ form input, form select {
     backdrop-filter: blur(10px);
     line-height: 1.4;
     letter-spacing: -0.1px;
+    box-sizing: border-box;
 }
 
-form input:focus, form select:focus {
+form textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+form input:focus, form select:focus, form textarea:focus {
     outline: none;
     border-color: var(--purple);
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
     background: var(--bg-surface);
 }
 
-form input::placeholder {
+form input::placeholder, form textarea::placeholder {
     color: rgba(255, 255, 255, 0.4);
 }
 
@@ -1539,7 +1545,8 @@ form input::placeholder {
 }
 
 .unavailable-disabled input:disabled,
-.unavailable-disabled select:disabled {
+.unavailable-disabled select:disabled,
+.unavailable-disabled textarea:disabled {
     background: rgba(255, 255, 255, 0.02) !important;
     border-color: rgba(255, 255, 255, 0.05) !important;
     color: rgba(255, 255, 255, 0.3) !important;
