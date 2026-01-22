@@ -221,10 +221,13 @@ app.post('/api/iffr/parse', async (req, res) => {
                 
                 if (datetimeAttr) {
                     // Parse datetime attribute: "2026-01-31 19:45"
+                    // IFFR times are in Amsterdam timezone (CET = UTC+1 for Jan-Feb)
                     const datetimeMatch = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
                     if (datetimeMatch) {
                         const [, year, month, day, hour, minute] = datetimeMatch;
-                        startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+                        // Create ISO string with Amsterdam timezone (+01:00 for CET)
+                        const isoString = `${year}-${month}-${day}T${hour}:${minute}:00+01:00`;
+                        startDate = new Date(isoString);
                     }
                 }
                 
@@ -237,11 +240,21 @@ app.post('/api/iffr/parse', async (req, res) => {
                     const [, day, date, month, year, startHour, startMin, endHour, endMin] = timeMatch;
                     const monthIndex = monthMap[month.toLowerCase()];
                     if (monthIndex !== undefined) {
+                        // IFFR times are in Amsterdam timezone (CET = UTC+1 for Jan-Feb)
+                        const monthStr = String(monthIndex + 1).padStart(2, '0');
+                        const dateStr = String(parseInt(date)).padStart(2, '0');
+                        const startHourStr = String(parseInt(startHour)).padStart(2, '0');
+                        const startMinStr = String(parseInt(startMin)).padStart(2, '0');
+                        const endHourStr = String(parseInt(endHour)).padStart(2, '0');
+                        const endMinStr = String(parseInt(endMin)).padStart(2, '0');
+                        
                         // Use parsed text if datetime attr failed or as validation
                         if (!startDate) {
-                            startDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(startHour), parseInt(startMin));
+                            const startIsoString = `${year}-${monthStr}-${dateStr}T${startHourStr}:${startMinStr}:00+01:00`;
+                            startDate = new Date(startIsoString);
                         }
-                        endDate = new Date(parseInt(year), monthIndex, parseInt(date), parseInt(endHour), parseInt(endMin));
+                        const endIsoString = `${year}-${monthStr}-${dateStr}T${endHourStr}:${endMinStr}:00+01:00`;
+                        endDate = new Date(endIsoString);
                     }
                 } else if (!startDate) {
                     // Fallback: if both datetime attr and text parsing failed, log and skip
@@ -254,8 +267,24 @@ app.post('/api/iffr/parse', async (req, res) => {
                     const endTimeMatch = timeText.match(/\|\s*\d{1,2}\.\d{2}\s*-\s*(\d{1,2})\.(\d{2})/);
                     if (endTimeMatch) {
                         const [, endHour, endMin] = endTimeMatch;
-                        endDate = new Date(startDate);
-                        endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                        // Extract date from datetime attribute and create end date in Amsterdam timezone
+                        const dateMatch = datetimeAttr ? datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})/) : null;
+                        if (dateMatch) {
+                            const [, year, month, day] = dateMatch;
+                            const endHourStr = String(parseInt(endHour)).padStart(2, '0');
+                            const endMinStr = String(parseInt(endMin)).padStart(2, '0');
+                            const endIsoString = `${year}-${month}-${day}T${endHourStr}:${endMinStr}:00+01:00`;
+                            endDate = new Date(endIsoString);
+                        } else {
+                            // Fallback: use startDate's date components
+                            const year = startDate.getUTCFullYear();
+                            const month = String(startDate.getUTCMonth() + 1).padStart(2, '0');
+                            const day = String(startDate.getUTCDate()).padStart(2, '0');
+                            const endHourStr = String(parseInt(endHour)).padStart(2, '0');
+                            const endMinStr = String(parseInt(endMin)).padStart(2, '0');
+                            const endIsoString = `${year}-${month}-${day}T${endHourStr}:${endMinStr}:00+01:00`;
+                            endDate = new Date(endIsoString);
+                        }
                     }
                 }
                 
@@ -418,11 +447,13 @@ app.post('/api/iffr/parse', async (req, res) => {
                     let startDate, endDate;
                     
                     // Parse start from datetime attribute
+                    // IFFR times are in Amsterdam timezone (CET = UTC+1 for Jan-Feb)
                     if (datetimeAttr) {
                         const m = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
                         if (m) {
                             const [, year, month, day, hour, minute] = m;
-                            startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+                            const isoString = `${year}-${month}-${day}T${hour}:${minute}:00+01:00`;
+                            startDate = new Date(isoString);
                         }
                     }
                     
@@ -430,8 +461,15 @@ app.post('/api/iffr/parse', async (req, res) => {
                     const endMatch = text.match(/\|\s*\d{1,2}\.\d{2}\s*-\s*(\d{1,2})\.(\d{2})/);
                     if (startDate && endMatch) {
                         const [, endHour, endMin] = endMatch;
-                        endDate = new Date(startDate);
-                        endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                        // Extract date from datetime attribute
+                        const dateMatch = datetimeAttr.match(/(\d{4})-(\d{2})-(\d{2})/);
+                        if (dateMatch) {
+                            const [, year, month, day] = dateMatch;
+                            const endHourStr = String(parseInt(endHour)).padStart(2, '0');
+                            const endMinStr = String(parseInt(endMin)).padStart(2, '0');
+                            const endIsoString = `${year}-${month}-${day}T${endHourStr}:${endMinStr}:00+01:00`;
+                            endDate = new Date(endIsoString);
+                        }
                     }
                     
                     if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
