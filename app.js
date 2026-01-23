@@ -1833,12 +1833,25 @@ class FilmFestivalPlanner {
                             film.notionPageId = notionId;
                             this.saveFilms();
                             console.log('Film created in Notion with pageId:', notionId);
-                        } else {
-                            console.warn('Failed to create film in Notion - no pageId returned');
+                            this.showSyncIndicator('✓ Saved to Notion', 'success');
+                            setTimeout(() => this.hideSyncIndicator(), 2000);
                         }
                     }).catch(err => {
+                        // Error already shown to user in createFilmInNotion
                         console.error('Error creating film in Notion:', err);
+                        // Film is still in calendar, but warn user it's not synced
+                        this.showSyncIndicator('⚠️ Film added but Notion sync failed. Check Settings.', 'error');
+                        setTimeout(() => this.hideSyncIndicator(), 5000);
                     });
+                } else {
+                    // Notion not configured - show warning to user
+                    const missing = [];
+                    if (!this.backendUrl) missing.push('Backend URL');
+                    if (!this.notionApiKey) missing.push('API Key');
+                    if (!this.notionDatabaseId) missing.push('Database ID');
+                    console.warn('Notion not configured. Missing:', missing.join(', '));
+                    this.showSyncIndicator(`⚠️ Notion not configured (missing: ${missing.join(', ')}). Film added locally only.`, 'error');
+                    setTimeout(() => this.hideSyncIndicator(), 6000);
                 }
                 
                 // UX: mirror the behavior when scheduling from favorites / switching screenings
@@ -1931,14 +1944,25 @@ class FilmFestivalPlanner {
                     film.notionPageId = notionId;
                     this.saveFilms();
                     console.log('Film created in Notion with pageId:', notionId);
-                } else {
-                    console.warn('Failed to create film in Notion - no pageId returned');
+                    this.showSyncIndicator('✓ Saved to Notion', 'success');
+                    setTimeout(() => this.hideSyncIndicator(), 2000);
                 }
             }).catch(err => {
+                // Error already shown to user in createFilmInNotion
                 console.error('Error creating film in Notion:', err);
+                // Film is still in favorites, but warn user it's not synced
+                this.showSyncIndicator('⚠️ Added to favorites but Notion sync failed. Check Settings.', 'error');
+                setTimeout(() => this.hideSyncIndicator(), 5000);
             });
         } else {
             console.log('Notion not configured, skipping Notion save');
+            const missing = [];
+            if (!this.backendUrl) missing.push('Backend URL');
+            if (!this.notionApiKey) missing.push('API Key');
+            if (!this.notionDatabaseId) missing.push('Database ID');
+            if (missing.length > 0) {
+                console.warn('Notion not configured. Missing:', missing.join(', '));
+            }
         }
 
         this.renderFavoritesSidebar();
@@ -2643,10 +2667,25 @@ class FilmFestivalPlanner {
                 if (notionId) {
                     film.notionPageId = notionId;
                     this.saveFilms();
+                    this.showSyncIndicator('✓ Saved to Notion', 'success');
+                    setTimeout(() => this.hideSyncIndicator(), 2000);
                 }
             }).catch(err => {
+                // Error already shown to user in createFilmInNotion
                 console.error('Error creating film in Notion:', err);
+                // Film is still in calendar, but warn user it's not synced
+                this.showSyncIndicator('⚠️ Film added but Notion sync failed. Check Settings.', 'error');
+                setTimeout(() => this.hideSyncIndicator(), 5000);
             });
+        } else {
+            // Notion not configured - show warning to user
+            const missing = [];
+            if (!this.backendUrl) missing.push('Backend URL');
+            if (!this.notionApiKey) missing.push('API Key');
+            if (!this.notionDatabaseId) missing.push('Database ID');
+            console.warn('Notion not configured. Missing:', missing.join(', '));
+            this.showSyncIndicator(`⚠️ Notion not configured (missing: ${missing.join(', ')}). Film added locally only.`, 'error');
+            setTimeout(() => this.hideSyncIndicator(), 6000);
         }
         
         this.renderCalendar();
@@ -2685,12 +2724,75 @@ class FilmFestivalPlanner {
         document.getElementById('settings-modal').style.display = 'none';
     }
 
+    // Extract Notion database ID from URL or return as-is if already an ID
+    extractNotionDatabaseId(input) {
+        if (!input) return '';
+        
+        const trimmed = input.trim();
+        
+        // If it's already just an ID (32 chars, with or without dashes), return it
+        // Notion IDs are 32 hex characters, optionally with dashes
+        const idPattern = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
+        if (idPattern.test(trimmed)) {
+            // Remove dashes if present (Notion API accepts both formats)
+            return trimmed.replace(/-/g, '');
+        }
+        
+        // If it looks like a URL, try to extract the ID
+        if (trimmed.includes('notion.so') || trimmed.includes('notion.com')) {
+            try {
+                const url = new URL(trimmed);
+                const pathParts = url.pathname.split('/').filter(p => p);
+                
+                // Find the database ID in the path
+                // Format: notion.so/workspace/DATABASE-ID or notion.so/workspace/Page-Title-DATABASE-ID
+                for (let i = pathParts.length - 1; i >= 0; i--) {
+                    const part = pathParts[i];
+                    // Check if this part contains a 32-char hex ID
+                    // Could be: "2eb513302a5580bd9197e9df2ed9768e" or "Page-Title-2eb513302a5580bd9197e9df2ed9768e"
+                    const idMatch = part.match(/([0-9a-f]{32})/i);
+                    if (idMatch) {
+                        return idMatch[1]; // Return the 32-char ID without dashes
+                    }
+                    // Also check for UUID format with dashes
+                    const uuidMatch = part.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+                    if (uuidMatch) {
+                        return uuidMatch[1].replace(/-/g, ''); // Remove dashes
+                    }
+                }
+            } catch (e) {
+                // If URL parsing fails, try regex extraction
+                const urlMatch = trimmed.match(/notion\.(so|com)\/[^\/]+\/([0-9a-f]{32})/i);
+                if (urlMatch) {
+                    return urlMatch[2];
+                }
+                const uuidUrlMatch = trimmed.match(/notion\.(so|com)\/[^\/]+\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+                if (uuidUrlMatch) {
+                    return uuidUrlMatch[2].replace(/-/g, '');
+                }
+            }
+        }
+        
+        // If we can't extract it, return the original (will fail validation later)
+        return trimmed;
+    }
+
     handleSettingsSave(e) {
         e.preventDefault();
         const userName = document.getElementById('user-name').value.trim();
         const apiKey = document.getElementById('notion-api-key').value.trim();
-        const dbId = document.getElementById('notion-database-id').value.trim();
+        const dbIdInput = document.getElementById('notion-database-id').value.trim();
         const backendUrl = document.getElementById('backend-url').value.trim();
+        
+        // Extract database ID from URL if needed
+        const dbId = this.extractNotionDatabaseId(dbIdInput);
+        
+        // Show feedback if we extracted from URL
+        if (dbIdInput && dbIdInput !== dbId && dbIdInput.includes('notion.so')) {
+            console.log(`Extracted database ID from URL: ${dbId}`);
+            // Update the input field to show the extracted ID
+            document.getElementById('notion-database-id').value = dbId;
+        }
         
         // Save user name
         if (userName) {
@@ -2781,7 +2883,8 @@ class FilmFestivalPlanner {
 
     async testNotionConnection() {
         const apiKey = document.getElementById('notion-api-key').value.trim();
-        const dbId = document.getElementById('notion-database-id').value.trim();
+        const dbIdInput = document.getElementById('notion-database-id').value.trim();
+        const dbId = this.extractNotionDatabaseId(dbIdInput);
         
         if (!apiKey || !dbId) {
             this.showNotionStatus('Please enter both API key and Database ID', 'error');
@@ -2896,12 +2999,37 @@ class FilmFestivalPlanner {
         }
     }
 
-    async createFilmInNotion(film) {
+    async createFilmInNotion(film, retryCount = 0) {
+        const maxRetries = 2;
+        
+        // Validate configuration
         if (!this.backendUrl || !this.notionApiKey || !this.notionDatabaseId) {
-            return null;
+            const missing = [];
+            if (!this.backendUrl) missing.push('Backend URL');
+            if (!this.notionApiKey) missing.push('Notion API Key');
+            if (!this.notionDatabaseId) missing.push('Notion Database ID');
+            
+            const errorMsg = `Cannot save to Notion: Missing ${missing.join(', ')}. Please check Settings.`;
+            console.error(errorMsg);
+            this.showSyncIndicator(errorMsg, 'error');
+            setTimeout(() => this.hideSyncIndicator(), 5000);
+            throw new Error(errorMsg);
+        }
+
+        // Validate backend URL is reachable (quick check)
+        if (!this.backendUrl.startsWith('http://') && !this.backendUrl.startsWith('https://')) {
+            const errorMsg = `Invalid backend URL: ${this.backendUrl}. Please check Settings.`;
+            console.error(errorMsg);
+            this.showSyncIndicator(errorMsg, 'error');
+            setTimeout(() => this.hideSyncIndicator(), 5000);
+            throw new Error(errorMsg);
         }
 
         try {
+            // Create abort controller for timeout (more compatible than AbortSignal.timeout)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+            
             const response = await fetch(`${this.backendUrl}/api/notion/create`, {
                 method: 'POST',
                 headers: {
@@ -2911,21 +3039,85 @@ class FilmFestivalPlanner {
                     databaseId: this.notionDatabaseId,
                     apiKey: this.notionApiKey,
                     film: film
-                })
+                }),
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to create in Notion');
+                let errorMessage = 'Failed to save to Notion';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                    
+                    // Parse Notion API errors for user-friendly messages
+                    if (errorData.error && typeof errorData.error === 'string') {
+                        if (errorData.error.includes('unauthorized') || errorData.error.includes('401')) {
+                            errorMessage = 'Notion API key is invalid. Please check Settings.';
+                        } else if (errorData.error.includes('not found') || errorData.error.includes('404')) {
+                            errorMessage = 'Notion database not found. Please check Database ID in Settings.';
+                        } else if (errorData.error.includes('permission')) {
+                            errorMessage = 'Notion integration lacks permission. Grant access in Notion.';
+                        } else if (errorData.error.includes('rate limit')) {
+                            errorMessage = 'Notion rate limit exceeded. Retrying...';
+                            // Retry on rate limit
+                            if (retryCount < maxRetries) {
+                                await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                                return this.createFilmInNotion(film, retryCount + 1);
+                            }
+                        }
+                    }
+                } catch (parseError) {
+                    // If response isn't JSON, use status text
+                    errorMessage = `Notion API error (${response.status}): ${response.statusText || 'Unknown error'}`;
+                }
+                
+                // Retry on network/server errors (5xx)
+                if (response.status >= 500 && retryCount < maxRetries) {
+                    console.log(`Retrying Notion save (attempt ${retryCount + 1}/${maxRetries})...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                    return this.createFilmInNotion(film, retryCount + 1);
+                }
+                
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
+            
+            // Validate response has an ID
+            if (!data.id) {
+                throw new Error('Notion API returned invalid response: missing page ID');
+            }
+            
             // Update film with Notion page ID
             film.notionPageId = data.id;
+            console.log('✓ Film saved to Notion:', film.title, 'Page ID:', data.id);
             return data.id;
         } catch (error) {
+            // Handle timeout and abort errors
+            if (error.name === 'AbortError' || error.name === 'TimeoutError' || error.message.includes('aborted')) {
+                const errorMsg = 'Notion save timed out. Check your connection and backend server.';
+                console.error(errorMsg);
+                this.showSyncIndicator(errorMsg, 'error');
+                setTimeout(() => this.hideSyncIndicator(), 5000);
+                throw new Error(errorMsg);
+            }
+            
+            // Handle fetch errors (network issues, CORS, etc.)
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                const errorMsg = `Cannot reach backend server at ${this.backendUrl}. Check Settings and ensure server is running.`;
+                console.error(errorMsg, error);
+                this.showSyncIndicator(errorMsg, 'error');
+                setTimeout(() => this.hideSyncIndicator(), 5000);
+                throw new Error(errorMsg);
+            }
+            
+            // For other errors, show the error message
             console.error('Error creating film in Notion:', error);
-            return null;
+            this.showSyncIndicator(error.message || 'Failed to save to Notion', 'error');
+            setTimeout(() => this.hideSyncIndicator(), 5000);
+            throw error;
         }
     }
 

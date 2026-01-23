@@ -635,15 +635,51 @@ app.post('/api/notion/create', async (req, res) => {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ error: errorText });
+            let errorMessage = 'Failed to create page in Notion';
+            try {
+                const errorData = await response.json();
+                // Parse Notion API error format
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (typeof errorData === 'string') {
+                    errorMessage = errorData;
+                } else {
+                    errorMessage = JSON.stringify(errorData);
+                }
+                
+                // Provide user-friendly messages for common errors
+                if (response.status === 401) {
+                    errorMessage = 'Unauthorized: Invalid Notion API key. Please check your integration secret.';
+                } else if (response.status === 404) {
+                    errorMessage = 'Database not found: Invalid database ID. Please check your database ID in Settings.';
+                } else if (response.status === 403) {
+                    errorMessage = 'Permission denied: Your Notion integration needs access to this database. Grant access in Notion.';
+                } else if (response.status === 429) {
+                    errorMessage = 'Rate limit exceeded: Too many requests. Please wait a moment and try again.';
+                }
+            } catch (parseError) {
+                // If response isn't JSON, use status text
+                const errorText = await response.text();
+                errorMessage = errorText || `Notion API error (${response.status}): ${response.statusText || 'Unknown error'}`;
+            }
+            
+            console.error('Notion API error:', response.status, errorMessage);
+            return res.status(response.status).json({ error: errorMessage });
         }
 
         const data = await response.json();
+        console.log('✓ Successfully created Notion page:', data.id, 'for film:', film.title);
         res.json(data);
     } catch (error) {
         console.error('Notion create error:', error);
-        res.status(500).json({ error: error.message });
+        // Provide more context for network errors
+        let errorMessage = error.message;
+        if (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED')) {
+            errorMessage = 'Cannot connect to Notion API. Check your internet connection.';
+        } else if (error.message.includes('timeout')) {
+            errorMessage = 'Request to Notion API timed out. Please try again.';
+        }
+        res.status(500).json({ error: errorMessage });
     }
 });
 
@@ -794,269 +830,7 @@ app.post('/api/notion/update', async (req, res) => {
     }
 });
 
-// NOTE: Duplicate parser endpoint removed - using the first one (line 78) with combined programme support
-// The second endpoint was overriding the first one and causing conflicts
-
-// Notion create page endpoint
-app.post('/api/notion/create', async (req, res) => {
-    try {
-        const { databaseId, apiKey, film } = req.body;
-        
-        if (!databaseId || !apiKey || !film) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-
-        // Map film to Notion properties
-        const properties = {
-            'Title': {
-                'title': [{ 'text': { 'content': film.title } }]
-            }
-        };
-
-        if (film.director) {
-            properties['Director'] = {
-                'rich_text': [{ 'text': { 'content': film.director } }]
-            };
-        }
-        if (film.country) {
-            properties['Country'] = {
-                'rich_text': [{ 'text': { 'content': film.country } }]
-            };
-        }
-        if (film.programme) {
-            properties['Programme'] = {
-                'rich_text': [{ 'text': { 'content': film.programme } }]
-            };
-        }
-        if (film.location) {
-            properties['Location'] = {
-                'rich_text': [{ 'text': { 'content': film.location } }]
-            };
-        }
-        if (film.iffrLink) {
-            properties['IFFR Link'] = {
-                'url': film.iffrLink
-            };
-            console.log('Including IFFR Link in Notion properties:', film.iffrLink);
-        } else {
-            console.log('WARNING: No IFFR Link found in film object. Film:', film.title, 'Keys:', Object.keys(film));
-        }
-
-        // Date properties
-        if (film.startTime) {
-            properties['Start Time'] = {
-                'date': {
-                    'start': new Date(film.startTime).toISOString()
-                }
-            };
-        }
-        if (film.endTime) {
-            properties['End Time'] = {
-                'date': {
-                    'start': new Date(film.endTime).toISOString()
-                }
-            };
-        }
-
-        // Checkbox properties
-        properties['Favorited'] = { 'checkbox': film.favorited || false };
-        properties['Ticket'] = { 'checkbox': film.ticket || false };
-        properties['Moderating'] = { 'checkbox': film.moderating || false };
-        properties['Q&A'] = { 'checkbox': film.hasQA || false };
-        // Explicitly handle unavailable - ensure boolean value
-        const unavailableValue = film.unavailable === true || film.unavailable === 'true';
-        properties['Unavailable'] = { 'checkbox': unavailableValue };
-        
-        // Store screenings as JSON string if available (for switching screenings later)
-        if (film.screenings && Array.isArray(film.screenings) && film.screenings.length > 0) {
-            const screeningsJson = JSON.stringify(film.screenings);
-            console.log('Saving screenings to Notion:', film.screenings.length, 'screenings, JSON length:', screeningsJson.length);
-            properties['Screenings'] = {
-                'rich_text': [{ 'text': { 'content': screeningsJson } }]
-            };
-        } else {
-            console.log('No screenings to save for film:', film.title);
-        }
-        
-        // Store notes if provided
-        if (film.notes) {
-            properties['Notes'] = {
-                'rich_text': [{ 'text': { 'content': film.notes } }]
-            };
-        }
-
-        const response = await fetch(`https://api.notion.com/v1/pages`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                parent: { database_id: databaseId },
-                properties: properties
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ error: errorText });
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('Notion create error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Notion delete/archive page endpoint
-app.post('/api/notion/delete', async (req, res) => {
-    try {
-        const { pageId, apiKey } = req.body;
-        
-        if (!pageId || !apiKey) {
-            return res.status(400).json({ error: 'Missing pageId or apiKey' });
-        }
-
-        // Archive the page (Notion doesn't support hard delete via API)
-        const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                archived: true
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ error: errorText });
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('Notion delete error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Notion update page endpoint
-app.post('/api/notion/update', async (req, res) => {
-    try {
-        const { pageId, apiKey, updates } = req.body;
-        
-        if (!pageId || !apiKey || !updates) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-
-        // Build properties object from updates
-        // Support both simple status updates and full film updates
-        const properties = {};
-        
-        // Handle full film object updates
-        if (updates['Title']) {
-            properties['Title'] = { 'title': [{ 'text': { 'content': updates['Title'] } }] };
-        }
-        // Handle Start Time - null clears the field, otherwise set the date
-        if (updates['Start Time'] !== undefined) {
-            if (updates['Start Time'] === null) {
-                properties['Start Time'] = { 'date': null }; // Clear the date field - Notion requires {date: null}
-            } else {
-                properties['Start Time'] = {
-                    'date': { 'start': new Date(updates['Start Time']).toISOString() }
-                };
-            }
-        }
-        // Handle End Time - null clears the field, otherwise set the date
-        if (updates['End Time'] !== undefined) {
-            if (updates['End Time'] === null) {
-                properties['End Time'] = { 'date': null }; // Clear the date field - Notion requires {date: null}
-            } else {
-                properties['End Time'] = {
-                    'date': { 'start': new Date(updates['End Time']).toISOString() }
-                };
-            }
-        }
-        // Handle Location - null clears the field, otherwise set the text
-        if (updates['Location'] !== undefined) {
-            if (updates['Location'] === null) {
-                properties['Location'] = { 'rich_text': [] }; // Clear the text field
-            } else {
-                properties['Location'] = { 'rich_text': [{ 'text': { 'content': updates['Location'] } }] };
-            }
-        }
-        if (updates['Director']) {
-            properties['Director'] = { 'rich_text': [{ 'text': { 'content': updates['Director'] } }] };
-        }
-        if (updates['Country']) {
-            properties['Country'] = { 'rich_text': [{ 'text': { 'content': updates['Country'] } }] };
-        }
-        if (updates['Programme']) {
-            properties['Programme'] = { 'rich_text': [{ 'text': { 'content': updates['Programme'] } }] };
-        }
-        if (updates['IFFR Link']) {
-            properties['IFFR Link'] = { 'url': updates['IFFR Link'] };
-        }
-        if (updates['Screenings']) {
-            properties['Screenings'] = {
-                'rich_text': [{ 'text': { 'content': typeof updates['Screenings'] === 'string' ? updates['Screenings'] : JSON.stringify(updates['Screenings']) } }]
-            };
-        }
-        if (updates['Notes']) {
-            properties['Notes'] = {
-                'rich_text': [{ 'text': { 'content': updates['Notes'] } }]
-            };
-        }
-        
-        // Handle simple status updates (backward compatibility)
-        if (updates.favorited !== undefined) {
-            properties['Favorited'] = { 'checkbox': updates.favorited };
-        }
-        if (updates.ticket !== undefined) {
-            properties['Ticket'] = { 'checkbox': updates.ticket };
-        }
-        if (updates.moderating !== undefined) {
-            properties['Moderating'] = { 'checkbox': updates.moderating };
-        }
-        if (updates.hasQA !== undefined) {
-            properties['Q&A'] = { 'checkbox': updates.hasQA };
-        }
-        if (updates.unavailable !== undefined) {
-            // Explicitly handle unavailable - ensure boolean value
-            const unavailableValue = updates.unavailable === true || updates.unavailable === 'true';
-            properties['Unavailable'] = { 'checkbox': unavailableValue };
-        }
-
-        const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                properties: properties
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ error: errorText });
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('Notion update error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
+// NOTE: Duplicate endpoints removed - using the first definitions (lines 536-795)
 
 // Share schedule endpoints - for dynamic sharing that always shows latest version
 // POST /api/share - Create or update a shared schedule
