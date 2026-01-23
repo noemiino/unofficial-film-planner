@@ -55,23 +55,7 @@ Connect your Notion database to sync films across devices.
 
 **Why this is best:** Duplicating a Notion database preserves all property types (Date, URL, Checkbox, etc.), so everything works perfectly without manual setup.
 
-**Option B: Import CSV (Requires Manual Property Type Fixes) ⚠️**
-
-⚠️ **Warning**: CSV import doesn't preserve property types. You'll need to manually change property types after import.
-
-1. Download the template: [Download CSV Template](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
-2. In Notion, create a new page or go to an existing page
-3. Type `/table` and select **"Table - Inline"** or **"Table - Full page"**
-4. Click **"..."** (three dots) in the top right of the table
-5. Select **"Import"** → **"CSV"**
-6. Upload the CSV file
-7. **IMPORTANT**: After import, you must manually fix property types:
-   - Click on **"Start Time"** column header → Change type to **"Date"** (with time enabled)
-   - Click on **"End Time"** column header → Change type to **"Date"** (with time enabled)
-   - Click on **"IFFR Link"** column header → Change type to **"URL"**
-   - All other text fields should remain as **"Text"** or **"Rich text"**
-
-**Option C: Create manually (Most Reliable) ⭐**
+**Option B: Create manually (Most Reliable) ⭐**
 
 This ensures all property types are correct from the start.
 
@@ -97,9 +81,11 @@ This ensures all property types are correct from the start.
 
 **Tip**: After creating, you can duplicate this database to share as a template with others!
 
-### Step 3: Set Up Database Properties
+### Step 3: Set Up Database Properties (Only if creating manually)
 
-Your database needs these properties (exact names or variations work):
+If you used Option A (duplicate template), skip this step - all properties are already configured!
+
+If you're creating manually (Option B), your database needs these properties (exact names or variations work):
 
 
 **Required Properties:**

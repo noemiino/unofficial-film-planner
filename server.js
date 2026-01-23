@@ -37,22 +37,6 @@ function saveShares() {
 app.use(cors());
 app.use(express.json());
 
-// CSV template download endpoint - must be before static middleware
-app.get('/download/template.csv', (req, res) => {
-    const csvPath = path.join(__dirname, 'Film-planner-database-template-csv.csv');
-    
-    if (!fs.existsSync(csvPath)) {
-        return res.status(404).json({ error: 'Template file not found' });
-    }
-    
-    // Set headers to force download
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="Film-planner-database-template-csv.csv"');
-    
-    // Send the file
-    res.sendFile(csvPath);
-});
-
 // Serve static files (HTML, CSS, JS) from the current directory
 app.use(express.static(__dirname));
 
