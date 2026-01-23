@@ -2319,15 +2319,12 @@ class FilmFestivalPlanner {
                 'Title': film.title
             };
 
-            // Only update start/end time if they exist (null means unscheduled)
-            if (film.startTime) {
-                updates['Start Time'] = film.startTime;
-            } else {
-                // If startTime is explicitly null, we might want to clear it
-                // But Notion doesn't support clearing date fields easily, so we'll skip it
+            // Update start/end time - send null to clear them when unscheduled
+            if (film.startTime !== undefined) {
+                updates['Start Time'] = film.startTime; // null clears the field in Notion
             }
-            if (film.endTime) {
-                updates['End Time'] = film.endTime;
+            if (film.endTime !== undefined) {
+                updates['End Time'] = film.endTime; // null clears the field in Notion
             }
             if (film.location) {
                 updates['Location'] = film.location;

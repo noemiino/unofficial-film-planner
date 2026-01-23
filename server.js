@@ -683,15 +683,25 @@ app.post('/api/notion/update', async (req, res) => {
         if (updates['Title']) {
             properties['Title'] = { 'title': [{ 'text': { 'content': updates['Title'] } }] };
         }
-        if (updates['Start Time']) {
-            properties['Start Time'] = {
-                'date': { 'start': new Date(updates['Start Time']).toISOString() }
-            };
+        // Handle Start Time - null clears the field, otherwise set the date
+        if (updates['Start Time'] !== undefined) {
+            if (updates['Start Time'] === null) {
+                properties['Start Time'] = null; // Clear the date field
+            } else {
+                properties['Start Time'] = {
+                    'date': { 'start': new Date(updates['Start Time']).toISOString() }
+                };
+            }
         }
-        if (updates['End Time']) {
-            properties['End Time'] = {
-                'date': { 'start': new Date(updates['End Time']).toISOString() }
-            };
+        // Handle End Time - null clears the field, otherwise set the date
+        if (updates['End Time'] !== undefined) {
+            if (updates['End Time'] === null) {
+                properties['End Time'] = null; // Clear the date field
+            } else {
+                properties['End Time'] = {
+                    'date': { 'start': new Date(updates['End Time']).toISOString() }
+                };
+            }
         }
         if (updates['Location']) {
             properties['Location'] = { 'rich_text': [{ 'text': { 'content': updates['Location'] } }] };
@@ -932,15 +942,25 @@ app.post('/api/notion/update', async (req, res) => {
         if (updates['Title']) {
             properties['Title'] = { 'title': [{ 'text': { 'content': updates['Title'] } }] };
         }
-        if (updates['Start Time']) {
-            properties['Start Time'] = {
-                'date': { 'start': new Date(updates['Start Time']).toISOString() }
-            };
+        // Handle Start Time - null clears the field, otherwise set the date
+        if (updates['Start Time'] !== undefined) {
+            if (updates['Start Time'] === null) {
+                properties['Start Time'] = null; // Clear the date field
+            } else {
+                properties['Start Time'] = {
+                    'date': { 'start': new Date(updates['Start Time']).toISOString() }
+                };
+            }
         }
-        if (updates['End Time']) {
-            properties['End Time'] = {
-                'date': { 'start': new Date(updates['End Time']).toISOString() }
-            };
+        // Handle End Time - null clears the field, otherwise set the date
+        if (updates['End Time'] !== undefined) {
+            if (updates['End Time'] === null) {
+                properties['End Time'] = null; // Clear the date field
+            } else {
+                properties['End Time'] = {
+                    'date': { 'start': new Date(updates['End Time']).toISOString() }
+                };
+            }
         }
         if (updates['Location']) {
             properties['Location'] = { 'rich_text': [{ 'text': { 'content': updates['Location'] } }] };
