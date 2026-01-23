@@ -235,20 +235,29 @@
                         Found in your database URL after notion.so/workspace/
                     </small>
                 </label>
-                <label>
-                    Backend Server URL:
-                    <input type="text" id="backend-url" placeholder="https://your-server.com or leave empty">
-                    <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 4px; font-size: 11px;">
-                        Leave empty for auto-detect. Set for remote access.
-                    </small>
-                </label>
                 <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
                     <button type="submit" class="btn-primary">Save & Sync</button>
                     <button type="button" id="test-notion-btn" class="btn-secondary">Test Connection</button>
-                    <button type="button" id="share-schedule-btn" class="btn-secondary">🔗 Share Schedule</button>
                 </div>
                 <div id="notion-status" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
-                <div id="share-status" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
+                
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <label style="margin-bottom: 12px;">
+                        Share Schedule:
+                    </label>
+                    <button type="button" id="share-schedule-btn" class="btn-secondary" style="width: 100%;">🔗 Share Schedule</button>
+                    <div id="share-status" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
+                </div>
+                
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <label>
+                        Backend Server URL:
+                        <input type="text" id="backend-url" placeholder="https://your-server.com or leave empty">
+                        <small style="color: rgba(255,255,255,0.5); display: block; margin-top: 4px; font-size: 11px; line-height: 1.4;">
+                            ⚠️ Advanced setting: Only change this if you're deploying to a server or using a tunnel. Leave empty for automatic detection.
+                        </small>
+                    </label>
+                </div>
             </form>
             <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
                 <p style="font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; margin: 0 0 8px 0;">
