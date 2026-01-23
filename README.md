@@ -23,13 +23,11 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
 
 ### Option 1: Use the Live Version (Easiest) ⭐
 
-**Just use it online - no setup needed!**
+**For non-technical users:** Follow the easy step-by-step guide: **[📖 How to Start Using the Unofficial Film Planner](https://noe-mi.notion.site/How-to-Start-Using-the-Unofficial-Film-Planner-2f1513302a5581ecaf30fcc8fa64b135)**
 
+**Quick version:**
 1. **Open the app**: [https://unofficial-film-planner-production.up.railway.app](https://unofficial-film-planner-production.up.railway.app)
-2. **Optional: Set up Notion sync** (see [SETUP_NOTION.md](./SETUP_NOTION.md)):
-   - Use the [Notion Database Template](#notion-database-template) (duplicate it to get started)
-   - Create a Notion integration
-   - Add your API key and Database ID in Settings
+2. **Optional: Set up Notion sync** (see [SETUP_NOTION.md](./SETUP_NOTION.md) or the [Notion guide](https://noe-mi.notion.site/How-to-Start-Using-the-Unofficial-Film-Planner-2f1513302a5581ecaf30fcc8fa64b135))
 3. Start adding films!
 
 **That's it!** The app works in your browser, and you can access it from your phone too.
@@ -66,7 +64,8 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
    - **Render** (free tier available)
 
 4. **Optional: Set up Notion sync** (see [SETUP_NOTION.md](./SETUP_NOTION.md)):
-   - Use the [Notion Database Template](#notion-database-template) (duplicate it to get started)
+   - Download the [Notion Database Template CSV](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
+   - Import it into Notion (see [Notion Database Template](#notion-database-template) section below)
    - Create a Notion integration
    - Add your API key and Database ID in Settings
 
@@ -80,32 +79,17 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
 
 ## Notion Database Template
 
-To make setup easier, you can import a pre-configured Notion database:
+**For easy setup instructions, see:** **[📖 How to Start Using the Unofficial Film Planner](https://noe-mi.notion.site/How-to-Start-Using-the-Unofficial-Film-Planner-2f1513302a5581ecaf30fcc8fa64b135)**
 
-1. **Download the template**: [Download CSV Template](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
-   - This CSV file contains all the database properties already configured
-
-2. **Import into Notion**:
-   - In Notion, create a new page or go to an existing page
-   - Click "..." (three dots) in the top right of the table
-   - Select "Import" → "CSV"
-   - Upload the `Film-planner-database-template-csv.csv` file
-   - Notion will create a database with all the right properties (Title, Start Time, End Time, Director, Country, Programme, Location, etc.)
-
-3. **Share with your integration**:
-   - Open your imported database
-   - Click "..." → "Connections" → Add your integration
-
-4. **Get your Database ID** from the URL (see [SETUP_NOTION.md](./SETUP_NOTION.md) for details)
-
-5. **Add to the app**: Settings → Paste your API key and Database ID → Save & Sync
-
-**Note**: The CSV template includes all required properties (Title, Start Time, End Time) and optional ones (Director, Country, Programme, Location, etc.) so you can start using it immediately. You can delete the test row after importing.
+**Quick reference:**
+- **Download the template**: [Download CSV Template](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
+- **Technical details**: See [SETUP_NOTION.md](./SETUP_NOTION.md) for developers
 
 ## Documentation
 
+- **[📖 Easy Setup Guide (Notion)](https://noe-mi.notion.site/How-to-Start-Using-the-Unofficial-Film-Planner-2f1513302a5581ecaf30fcc8fa64b135)** - Step-by-step guide for non-technical users ⭐
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Deploy the server, access from phone, share schedules
-- **[SETUP_NOTION.md](./SETUP_NOTION.md)** - Set up Notion integration (optional)
+- **[SETUP_NOTION.md](./SETUP_NOTION.md)** - Technical details for Notion integration (optional)
 
 ## For Developers
 
