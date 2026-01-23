@@ -82,7 +82,7 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
 
 To make setup easier, you can import a pre-configured Notion database:
 
-1. **Download the template**: [Film-planner-database-template-csv.csv](./Film-planner-database-template-csv.csv)
+1. **Download the template**: [Download CSV Template](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
    - This CSV file contains all the database properties already configured
 
 2. **Import into Notion**:
