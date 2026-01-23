@@ -2326,7 +2326,8 @@ class FilmFestivalPlanner {
             if (film.endTime !== undefined) {
                 updates['End Time'] = film.endTime; // null clears the field in Notion
             }
-            if (film.location) {
+            // Send Location even if null (to clear it when unscheduling)
+            if (film.location !== undefined) {
                 updates['Location'] = film.location;
             }
             if (film.director) {

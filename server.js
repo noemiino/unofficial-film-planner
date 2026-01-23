@@ -702,7 +702,7 @@ app.post('/api/notion/update', async (req, res) => {
         // Handle Start Time - null clears the field, otherwise set the date
         if (updates['Start Time'] !== undefined) {
             if (updates['Start Time'] === null) {
-                properties['Start Time'] = null; // Clear the date field
+                properties['Start Time'] = { 'date': null }; // Clear the date field - Notion requires {date: null}
             } else {
                 properties['Start Time'] = {
                     'date': { 'start': new Date(updates['Start Time']).toISOString() }
@@ -712,15 +712,20 @@ app.post('/api/notion/update', async (req, res) => {
         // Handle End Time - null clears the field, otherwise set the date
         if (updates['End Time'] !== undefined) {
             if (updates['End Time'] === null) {
-                properties['End Time'] = null; // Clear the date field
+                properties['End Time'] = { 'date': null }; // Clear the date field - Notion requires {date: null}
             } else {
                 properties['End Time'] = {
                     'date': { 'start': new Date(updates['End Time']).toISOString() }
                 };
             }
         }
-        if (updates['Location']) {
-            properties['Location'] = { 'rich_text': [{ 'text': { 'content': updates['Location'] } }] };
+        // Handle Location - null clears the field, otherwise set the text
+        if (updates['Location'] !== undefined) {
+            if (updates['Location'] === null) {
+                properties['Location'] = { 'rich_text': [] }; // Clear the text field
+            } else {
+                properties['Location'] = { 'rich_text': [{ 'text': { 'content': updates['Location'] } }] };
+            }
         }
         if (updates['Director']) {
             properties['Director'] = { 'rich_text': [{ 'text': { 'content': updates['Director'] } }] };
@@ -961,7 +966,7 @@ app.post('/api/notion/update', async (req, res) => {
         // Handle Start Time - null clears the field, otherwise set the date
         if (updates['Start Time'] !== undefined) {
             if (updates['Start Time'] === null) {
-                properties['Start Time'] = null; // Clear the date field
+                properties['Start Time'] = { 'date': null }; // Clear the date field - Notion requires {date: null}
             } else {
                 properties['Start Time'] = {
                     'date': { 'start': new Date(updates['Start Time']).toISOString() }
@@ -971,15 +976,20 @@ app.post('/api/notion/update', async (req, res) => {
         // Handle End Time - null clears the field, otherwise set the date
         if (updates['End Time'] !== undefined) {
             if (updates['End Time'] === null) {
-                properties['End Time'] = null; // Clear the date field
+                properties['End Time'] = { 'date': null }; // Clear the date field - Notion requires {date: null}
             } else {
                 properties['End Time'] = {
                     'date': { 'start': new Date(updates['End Time']).toISOString() }
                 };
             }
         }
-        if (updates['Location']) {
-            properties['Location'] = { 'rich_text': [{ 'text': { 'content': updates['Location'] } }] };
+        // Handle Location - null clears the field, otherwise set the text
+        if (updates['Location'] !== undefined) {
+            if (updates['Location'] === null) {
+                properties['Location'] = { 'rich_text': [] }; // Clear the text field
+            } else {
+                properties['Location'] = { 'rich_text': [{ 'text': { 'content': updates['Location'] } }] };
+            }
         }
         if (updates['Director']) {
             properties['Director'] = { 'rich_text': [{ 'text': { 'content': updates['Director'] } }] };
