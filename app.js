@@ -3304,9 +3304,16 @@ class FilmFestivalPlanner {
             return;
         }
 
+        // Filter out sensitive/internal data before sharing
+        // Remove notionPageId and any other Notion-specific metadata
+        const filmsToShare = this.films.map(film => {
+            const { notionPageId, ...filmData } = film;
+            return filmData;
+        });
+
         const scheduleData = {
             userName: this.userName || 'Anonymous',
-            films: this.films
+            films: filmsToShare
         };
 
         // Always try dynamic sharing first (creates short URLs)

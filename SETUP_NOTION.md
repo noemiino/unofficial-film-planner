@@ -46,7 +46,18 @@ Connect your Notion database to sync films across devices.
 
 ### Step 2: Create a Notion Database
 
-**Option A: Import the CSV template (Easiest) ⭐**
+**Option A: Duplicate a Notion Template (Recommended - Preserves Property Types) ⭐**
+
+1. Open this Notion template: **[IFFR Film Planner Template](https://noe-mi.notion.site/2ed513302a5580fb8d4de0a4a594eeaa?v=6611426185744feb8cdd70c5c4d9719f)**
+2. Click **"Duplicate"** in the top right corner
+3. The database will be created in your workspace with all properties correctly configured!
+4. Skip to Step 4 (Share Database with Integration)
+
+**Why this is best:** Duplicating a Notion database preserves all property types (Date, URL, Checkbox, etc.), so everything works perfectly without manual setup.
+
+**Option B: Import CSV (Requires Manual Property Type Fixes) ⚠️**
+
+⚠️ **Warning**: CSV import doesn't preserve property types. You'll need to manually change property types after import.
 
 1. Download the template: [Download CSV Template](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
 2. In Notion, create a new page or go to an existing page
@@ -54,13 +65,37 @@ Connect your Notion database to sync films across devices.
 4. Click **"..."** (three dots) in the top right of the table
 5. Select **"Import"** → **"CSV"**
 6. Upload the CSV file
-7. Notion will create a database with all the right properties already configured!
+7. **IMPORTANT**: After import, you must manually fix property types:
+   - Click on **"Start Time"** column header → Change type to **"Date"** (with time enabled)
+   - Click on **"End Time"** column header → Change type to **"Date"** (with time enabled)
+   - Click on **"IFFR Link"** column header → Change type to **"URL"**
+   - All other text fields should remain as **"Text"** or **"Rich text"**
 
-**Option B: Create manually**
+**Option C: Create manually (Most Reliable) ⭐**
+
+This ensures all property types are correct from the start.
 
 1. In Notion, create a new page or go to an existing page
 2. Type `/database` and select **"Table - Inline"** or **"Table - Full page"**
 3. Name your database (e.g., "IFFR Films")
+4. Add properties one by one with correct types:
+   - **Title** - Already exists (Title type)
+   - Click **"+"** to add **"Start Time"** → Select **"Date"** → Enable **"Include time"**
+   - Click **"+"** to add **"End Time"** → Select **"Date"** → Enable **"Include time"**
+   - Click **"+"** to add **"IFFR Link"** → Select **"URL"**
+   - Click **"+"** to add **"Director"** → Select **"Text"** or **"Rich text"**
+   - Click **"+"** to add **"Country"** → Select **"Text"** or **"Rich text"**
+   - Click **"+"** to add **"Programme"** → Select **"Text"** or **"Rich text"**
+   - Click **"+"** to add **"Location"** → Select **"Text"** or **"Rich text"**
+   - Click **"+"** to add **"Favorited"** → Select **"Checkbox"**
+   - Click **"+"** to add **"Ticket"** → Select **"Checkbox"**
+   - Click **"+"** to add **"Moderating"** → Select **"Checkbox"**
+   - Click **"+"** to add **"Q&A"** → Select **"Checkbox"**
+   - Click **"+"** to add **"Unavailable"** → Select **"Checkbox"**
+   - Click **"+"** to add **"Screenings"** → Select **"Text"** or **"Rich text"**
+   - Click **"+"** to add **"Notes"** → Select **"Text"** or **"Rich text"**
+
+**Tip**: After creating, you can duplicate this database to share as a template with others!
 
 ### Step 3: Set Up Database Properties
 
@@ -69,21 +104,27 @@ Your database needs these properties (exact names or variations work):
 
 **Required Properties:**
 - **Title** (Title property) - The film title
-- **Start Time** (Date property) - When the screening starts (with time)
-- **End Time** (Date property) - When the screening ends (with time)
+- **Start Time** (Date property with time enabled) - When the screening starts
+- **End Time** (Date property with time enabled) - When the screening ends
 
 **Optional Properties:**
-- **Director** (Text property)
-- **Country** (Text property)
-- **Programme** (Text property)
-- **Location** (Text property)
+- **Director** (Text or Rich text property)
+- **Country** (Text or Rich text property)
+- **Programme** (Text or Rich text property)
+- **Location** (Text or Rich text property)
 - **IFFR Link** (URL property) - Link to the film on IFFR website
 - **Favorited** (Checkbox property)
 - **Ticket** (Checkbox property)
 - **Moderating** (Checkbox property)
+- **Q&A** (Checkbox property)
 - **Unavailable** (Checkbox property) - Marks time slots as unavailable (other commitments)
-- **Screenings** (Text/Rich Text property) - Stores all available screenings as JSON (for films with multiple screening times)
-- **Notes** (Text/Rich Text property) - Personal notes about why you want to see the film
+- **Screenings** (Text or Rich text property) - Stores all available screenings as JSON (for films with multiple screening times)
+- **Notes** (Text or Rich text property) - Personal notes about why you want to see the film
+
+**Important Notes:**
+- The app automatically detects property types and works with both Date/URL types AND Text types
+- If you use Text types for Start Time, End Time, or IFFR Link, the app will convert dates to readable strings
+- However, using the correct types (Date for times, URL for links) provides better Notion functionality
 
 **Property Name Variations:**
 The app will recognize these variations:

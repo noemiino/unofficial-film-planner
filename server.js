@@ -542,6 +542,34 @@ app.post('/api/notion/create', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        // First, fetch the database schema to detect property types
+        let databaseSchema = null;
+        try {
+            const schemaResponse = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Notion-Version': '2022-06-28'
+                }
+            });
+            
+            if (schemaResponse.ok) {
+                const schemaData = await schemaResponse.json();
+                databaseSchema = schemaData.properties || {};
+                console.log('Database schema detected:', Object.keys(databaseSchema).map(key => `${key}: ${databaseSchema[key].type}`).join(', '));
+            }
+        } catch (schemaError) {
+            console.warn('Could not fetch database schema, using defaults:', schemaError.message);
+        }
+
+        // Helper function to get property type from schema, with fallback
+        const getPropertyType = (propName) => {
+            if (databaseSchema && databaseSchema[propName]) {
+                return databaseSchema[propName].type;
+            }
+            return null; // Will use defaults
+        };
+
         // Map film to Notion properties
         const properties = {
             'Title': {
@@ -569,29 +597,70 @@ app.post('/api/notion/create', async (req, res) => {
                 'rich_text': [{ 'text': { 'content': film.location } }]
             };
         }
+        // IFFR Link - detect type from schema
         if (film.iffrLink) {
-            properties['IFFR Link'] = {
-                'url': film.iffrLink
-            };
-            console.log('Including IFFR Link in Notion properties:', film.iffrLink);
+            const iffrLinkType = getPropertyType('IFFR Link');
+            if (iffrLinkType === 'rich_text' || iffrLinkType === 'text') {
+                properties['IFFR Link'] = {
+                    'rich_text': [{ 'text': { 'content': film.iffrLink } }]
+                };
+            } else {
+                // Default to URL type
+                properties['IFFR Link'] = {
+                    'url': film.iffrLink
+                };
+            }
+            console.log('Including IFFR Link in Notion properties:', film.iffrLink, 'as type:', iffrLinkType || 'url');
         } else {
             console.log('WARNING: No IFFR Link found in film object. Film:', film.title, 'Keys:', Object.keys(film));
         }
 
-        // Date properties
+        // Date properties - detect type from schema
         if (film.startTime) {
-            properties['Start Time'] = {
-                'date': {
-                    'start': new Date(film.startTime).toISOString()
-                }
-            };
+            const startTimeType = getPropertyType('Start Time');
+            if (startTimeType === 'rich_text' || startTimeType === 'text') {
+                // Convert date to readable string format
+                const dateStr = new Date(film.startTime).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                properties['Start Time'] = {
+                    'rich_text': [{ 'text': { 'content': dateStr } }]
+                };
+            } else {
+                // Default to date type
+                properties['Start Time'] = {
+                    'date': {
+                        'start': new Date(film.startTime).toISOString()
+                    }
+                };
+            }
         }
         if (film.endTime) {
-            properties['End Time'] = {
-                'date': {
-                    'start': new Date(film.endTime).toISOString()
-                }
-            };
+            const endTimeType = getPropertyType('End Time');
+            if (endTimeType === 'rich_text' || endTimeType === 'text') {
+                // Convert date to readable string format
+                const dateStr = new Date(film.endTime).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                properties['End Time'] = {
+                    'rich_text': [{ 'text': { 'content': dateStr } }]
+                };
+            } else {
+                // Default to date type
+                properties['End Time'] = {
+                    'date': {
+                        'start': new Date(film.endTime).toISOString()
+                    }
+                };
+            }
         }
 
         // Checkbox properties

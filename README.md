@@ -64,10 +64,10 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
    - **Render** (free tier available)
 
 4. **Optional: Set up Notion sync** (see [SETUP_NOTION.md](./SETUP_NOTION.md)):
-   - Download the [Notion Database Template CSV](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
-   - Import it into Notion (see [Notion Database Template](#notion-database-template) section below)
+   - Create a Notion database (duplicate a template or import CSV - see setup guide)
    - Create a Notion integration
    - Add your API key and Database ID in Settings
+   - ⚠️ **Note**: If using CSV import, you must manually set property types (Date for Start/End Time, URL for IFFR Link)
 
 ## Sharing Your Schedule
 
@@ -82,8 +82,11 @@ If you find it useful, great! If you want to improve it, even better. Feel free 
 **For easy setup instructions, see:** **[📖 How to Start Using the Unofficial Film Planner](https://noe-mi.notion.site/How-to-Start-Using-the-Unofficial-Film-Planner-2f1513302a5581ecaf30fcc8fa64b135)**
 
 **Quick reference:**
-- **Download the template**: [Download CSV Template](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (automatically downloads)
+- **⭐ Best option**: [Duplicate the Notion Template](https://noe-mi.notion.site/2ed513302a5580fb8d4de0a4a594eeaa?v=6611426185744feb8cdd70c5c4d9719f) - preserves all property types automatically
+- **Alternative**: [Download CSV Template](https://unofficial-film-planner-iffr.up.railway.app/download/template.csv) (requires manual property type fixes after import)
 - **Technical details**: See [SETUP_NOTION.md](./SETUP_NOTION.md) for developers
+
+**Important**: The app works with both Date/URL types AND Text types, but using the Notion template ensures everything is configured correctly from the start.
 
 ## Documentation
 
